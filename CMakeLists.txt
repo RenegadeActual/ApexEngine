@@ -8,8 +8,14 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 
 set (CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
-add_executable(apex main.cpp)
+add_executable(apex 
+    main.cpp
+)
 
+target_compile_options(apex PRIVATE
+    -fno-exceptions
+    -fno-rtti
+)
 if(WIN32)
     target_compile_definitions(apex PRIVATE
         UNICODE
