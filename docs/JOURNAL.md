@@ -19,7 +19,7 @@ Resolution: created .clangd file at project root with explicit CompileFlags
 Add: directive duplicating the defines. This forces clangd to apply them
 regardless of how it interprets compile_commands.json.
 
-Tag this as: any time clangd shows different errors than the actual build,
+Note: any time clangd shows different errors than the actual build,
 check the .clangd file first.
 
 ## 2026-05-12 - Disabling exceptions to improve performance
