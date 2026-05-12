@@ -10,6 +10,7 @@ set (CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 add_executable(apex 
     main.cpp
+    Window.cpp
 )
 
 target_compile_options(apex PRIVATE
