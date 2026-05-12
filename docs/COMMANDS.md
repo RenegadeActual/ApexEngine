@@ -1,11 +1,11 @@
 ## Reconfigure CMAKE
 
-cmake --preset windows-debug
+```cmake --preset windows-debug```
 
 ## Debug Build
 
-cmake --build --preset windows-debug
+```cmake --build --preset windows-debug```
 
 ## Run Debug .EXE
 
-.\build\windows-debug\apex.exe
+```.\build\windows-debug\apex.exe```
