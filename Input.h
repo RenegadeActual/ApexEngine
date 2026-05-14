@@ -14,24 +14,72 @@ enum class Key : u32 {
     Unknown = 0,
 
     // Letters
-    A, B, C, D, E, F, G, H, I, J, K, L, M,
-    N, O, P, Q, R, S, T, U, V, W, X, Y, Z,
+    A,
+    B,
+    C,
+    D,
+    E,
+    F,
+    G,
+    H,
+    I,
+    J,
+    K,
+    L,
+    M,
+    N,
+    O,
+    P,
+    Q,
+    R,
+    S,
+    T,
+    U,
+    V,
+    W,
+    X,
+    Y,
+    Z,
 
     // Digits (top row, not numpad)
-    Num0, Num1, Num2, Num3, Num4,
-    Num5, Num6, Num7, Num8, Num9,
+    Num0,
+    Num1,
+    Num2,
+    Num3,
+    Num4,
+    Num5,
+    Num6,
+    Num7,
+    Num8,
+    Num9,
 
     // Function keys
-    F1, F2, F3, F4, F5, F6,
-    F7, F8, F9, F10, F11, F12,
+    F1,
+    F2,
+    F3,
+    F4,
+    F5,
+    F6,
+    F7,
+    F8,
+    F9,
+    F10,
+    F11,
+    F12,
 
     // Arrows
-    Left, Right, Up, Down,
+    Left,
+    Right,
+    Up,
+    Down,
 
     // Modifiers
-    LeftShift,  RightShift,
-    LeftCtrl,   RightCtrl,
-    LeftAlt,    RightAlt,
+    LeftShift,
+    RightShift,
+    LeftCtrl,
+    RightCtrl,
+    LeftAlt,
+    RightAlt,
 
     // Common specials
     Space,
@@ -70,15 +118,15 @@ enum class MouseButton : u32 {
 class Input {
 public:
     // ---- Lifecycle ----
-    static bool   Init();
-    static void   Shutdown();
+    static bool Init();
+    static void Shutdown();
     static Input& Get();
 
     // Non-copyable, non-movable. Singletons are unique by nature.
-    Input(const Input&)            = delete;
+    Input(const Input&) = delete;
     Input& operator=(const Input&) = delete;
-    Input(Input&&)                 = delete;
-    Input& operator=(Input&&)      = delete;
+    Input(Input&&) = delete;
+    Input& operator=(Input&&) = delete;
 
     // ---- Per-frame ----
 
@@ -99,8 +147,8 @@ public:
     // ---- Queries (used by game code) ----
 
     bool IsKeyDown(Key key) const;
-    bool WasKeyPressed(Key key) const;       // not down last frame, down this frame
-    bool WasKeyReleased(Key key) const;      // down last frame, not down this frame
+    bool WasKeyPressed(Key key) const;  // not down last frame, down this frame
+    bool WasKeyReleased(Key key) const; // down last frame, not down this frame
 
     bool IsMouseButtonDown(MouseButton button) const;
     bool WasMouseButtonPressed(MouseButton button) const;
@@ -113,18 +161,18 @@ public:
     f32 GetMouseWheelDelta() const;
 
 private:
-    Input()  = default;
+    Input() = default;
     ~Input() = default;
 
-    static constexpr size_t kKeyCount   = static_cast<size_t>(Key::Count);
+    static constexpr size_t kKeyCount = static_cast<size_t>(Key::Count);
     static constexpr size_t kMouseCount = static_cast<size_t>(MouseButton::Count);
 
     // Key state — current frame and previous frame.
-    bool m_keysDown[kKeyCount]          = {};
+    bool m_keysDown[kKeyCount] = {};
     bool m_keysDownLastFrame[kKeyCount] = {};
 
     // Mouse button state — current frame and previous frame.
-    bool m_mouseDown[kMouseCount]          = {};
+    bool m_mouseDown[kMouseCount] = {};
     bool m_mouseDownLastFrame[kMouseCount] = {};
 
     // Mouse position (absolute, in window client coordinates).

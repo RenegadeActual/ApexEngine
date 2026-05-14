@@ -7,7 +7,8 @@ namespace apex {
 // ------------------------------------------------------------------------------
 // Fixed-width integer type aliases for better readability and consistency across platforms.
 //
-// The C++ standard guarantees these are exact-size types. Using short aliases improves code clarity and reduces verbosity.
+// The C++ standard guarantees these are exact-size types. Using short aliases improves code clarity
+// and reduces verbosity.
 // - u8: 8-bit unsigned integer (0 to 255)
 // - u16: 16-bit unsigned integer (0 to 65,535)
 // - u32: 32-bit unsigned integer (0 to 4,294,967,295)
@@ -36,19 +37,20 @@ using f64 = double;
 // ------------------------------------------------------------------------------
 // Engine-wide status codes for function return values.
 //
-// Returned from any function that can fail. Add new values as needed but never change existing values to avoid breaking existing code.
+// Returned from any function that can fail. Add new values as needed but never change existing
+// values to avoid breaking existing code.
 // -------------------------------------------------------------------------------
 enum class Status : u32 {
     Ok = 0, // Operation completed successfully
 
     // General errors
-    Unknown, // An unknown error occurred
+    Unknown,         // An unknown error occurred
     InvalidArgument, // An argument passed to a function was invalid
-    OutOfMemory, // The system ran out of memory
-    NotImplemented, // The requested functionality is not implemented
-    
+    OutOfMemory,     // The system ran out of memory
+    NotImplemented,  // The requested functionality is not implemented
+
     // Platform Layer errors
-    PlatformInitFailed, // Failed to initialize the platform layer
+    PlatformInitFailed,   // Failed to initialize the platform layer
     WindowCreationFailed, // Failed to create a window
 
 };

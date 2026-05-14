@@ -1,0 +1,70 @@
+---
+# ApexEngine clang-format configuration.
+# Codifies the rules in docs/STYLE.md.
+
+# Base style we're customizing from. LLVM is clang's default, which is
+# closest to what your existing code already looks like.
+BasedOnStyle: LLVM
+
+# ---- Language and standard ----
+Language: Cpp
+Standard: c++20
+
+# ---- Indentation ----
+IndentWidth: 4
+TabWidth: 4
+UseTab: Never
+ContinuationIndentWidth: 4
+AccessModifierOffset: -4
+NamespaceIndentation: None
+IndentCaseLabels: false
+
+# ---- Braces ----
+BreakBeforeBraces: Attach
+Cpp11BracedListStyle: true
+
+# ---- Line length ----
+ColumnLimit: 100
+
+# ---- Pointer / reference alignment ----
+PointerAlignment: Left
+ReferenceAlignment: Left
+
+# ---- Spacing ----
+SpaceBeforeParens: ControlStatements
+SpacesInParentheses: false
+SpacesInSquareBrackets: false
+SpaceAfterCStyleCast: false
+SpaceAfterTemplateKeyword: true
+SpaceBeforeAssignmentOperators: true
+SpaceBeforeCpp11BracedList: true
+SpaceBeforeRangeBasedForLoopColon: true
+SpacesBeforeTrailingComments: 1
+
+# ---- Alignment ----
+AlignConsecutiveAssignments: false
+AlignConsecutiveDeclarations: false
+AlignTrailingComments: true
+AlignOperands: Align
+AlignAfterOpenBracket: Align
+
+# ---- Wrapping ----
+AllowShortFunctionsOnASingleLine: Inline
+AllowShortIfStatementsOnASingleLine: Never
+AllowShortLoopsOnASingleLine: false
+AllowShortCaseLabelsOnASingleLine: false
+AllowShortBlocksOnASingleLine: Empty
+BinPackArguments: false
+BinPackParameters: false
+AllowAllArgumentsOnNextLine: true
+AllowAllParametersOfDeclarationOnNextLine: true
+
+# ---- Include ordering ----
+SortIncludes: CaseInsensitive
+IncludeBlocks: Preserve
+
+# ---- Misc ----
+ReflowComments: true
+FixNamespaceComments: true
+EmptyLineBeforeAccessModifier: LogicalBlock
+SeparateDefinitionBlocks: Leave

@@ -19,7 +19,7 @@ enum class LogLevel : u32 {
     Warn,
     Error,
     Fatal,
-    Off,    // Sentinel; not a value you'd ever log AT, only set AS a threshold.
+    Off, // Sentinel; not a value you'd ever log AT, only set AS a threshold.
 };
 
 // ---------------------------------------------------------------------------
@@ -40,10 +40,10 @@ public:
     static void Shutdown();
     static Log& Get();
 
-    Log(const Log&)            = delete;
+    Log(const Log&) = delete;
     Log& operator=(const Log&) = delete;
-    Log(Log&&)                 = delete;
-    Log& operator=(Log&&)      = delete;
+    Log(Log&&) = delete;
+    Log& operator=(Log&&) = delete;
 
     // ---- Configuration ----
 
@@ -71,7 +71,7 @@ public:
               std::string_view message);
 
 private:
-    Log()  = default;
+    Log() = default;
     ~Log() = default;
 
     static Log* s_instance;
@@ -97,17 +97,17 @@ private:
 // non-literal source would be undefined behavior.
 // ---------------------------------------------------------------------------
 
-#define APEX_LOG_IMPL(level, category, ...)                                   \
-    do {                                                                      \
-        if (::apex::Log::Get().IsEnabled((level), (category))) {              \
-            ::apex::Log::Get().Emit((level), (category), __FILE__, __LINE__,  \
-                                    std::format(__VA_ARGS__));                \
-        }                                                                     \
+#define APEX_LOG_IMPL(level, category, ...)                                                        \
+    do {                                                                                           \
+        if (::apex::Log::Get().IsEnabled((level), (category))) {                                   \
+            ::apex::Log::Get().Emit(                                                               \
+                (level), (category), __FILE__, __LINE__, std::format(__VA_ARGS__));                \
+        }                                                                                          \
     } while (0)
 
 #define LOG_TRACE(category, ...) APEX_LOG_IMPL(::apex::LogLevel::Trace, (category), __VA_ARGS__)
 #define LOG_DEBUG(category, ...) APEX_LOG_IMPL(::apex::LogLevel::Debug, (category), __VA_ARGS__)
-#define LOG_INFO(category, ...)  APEX_LOG_IMPL(::apex::LogLevel::Info,  (category), __VA_ARGS__)
-#define LOG_WARN(category, ...)  APEX_LOG_IMPL(::apex::LogLevel::Warn,  (category), __VA_ARGS__)
+#define LOG_INFO(category, ...) APEX_LOG_IMPL(::apex::LogLevel::Info, (category), __VA_ARGS__)
+#define LOG_WARN(category, ...) APEX_LOG_IMPL(::apex::LogLevel::Warn, (category), __VA_ARGS__)
 #define LOG_ERROR(category, ...) APEX_LOG_IMPL(::apex::LogLevel::Error, (category), __VA_ARGS__)
 #define LOG_FATAL(category, ...) APEX_LOG_IMPL(::apex::LogLevel::Fatal, (category), __VA_ARGS__)

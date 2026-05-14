@@ -9,14 +9,18 @@ namespace apex {
 // ------------------------------------------------------------------------------
 // Forward declaration of the platform-specific implementation struct.
 //
-// Uses PIMPL (Pointer to Implementation) idiom to hide platform-specific details from the public interface. The actual definition of Impl will be in the corresponding .cpp file and will contain all the platform-specific members and logic.
+// Uses PIMPL (Pointer to Implementation) idiom to hide platform-specific details from the public
+// interface. The actual definition of Impl will be in the corresponding .cpp file and will contain
+// all the platform-specific members and logic.
 // ------------------------------------------------------------------------------
 struct WindowImpl;
 
 // ------------------------------------------------------------------------------
 // A platform window.
 //
-// Constructed via the static Create() factory function; check the returned optional for success. The constructor is private since you can't signal failure without exceptions (which we don't want to use).
+// Constructed via the static Create() factory function; check the returned optional for success.
+// The constructor is private since you can't signal failure without exceptions (which we don't want
+// to use).
 // ------------------------------------------------------------------------------
 class Window {
 public:
@@ -27,7 +31,8 @@ public:
 
     ~Window();
 
-    // Non-copyable and non-movable to prevent accidental copying or moving of the window instance, which could lead to resource management issues.
+    // Non-copyable and non-movable to prevent accidental copying or moving of the window instance,
+    // which could lead to resource management issues.
     Window(const Window&) = delete;
     Window& operator=(const Window&) = delete;
     Window(Window&&) = delete;
@@ -53,4 +58,4 @@ private:
     WindowImpl* m_impl = nullptr;
 };
 
-}
+} // namespace apex

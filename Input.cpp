@@ -21,7 +21,7 @@ bool Input::Init() {
         return true;
     }
 
-    s_instance = new(std::nothrow) Input();
+    s_instance = new (std::nothrow) Input();
     if (s_instance == nullptr) {
         return false;
     }
@@ -139,12 +139,22 @@ bool Input::WasMouseButtonReleased(MouseButton button) const {
     return (i < kMouseCount) && !m_mouseDown[i] && m_mouseDownLastFrame[i];
 }
 
-i32 Input::GetMouseX() const { return m_mouseX; }
-i32 Input::GetMouseY() const { return m_mouseY; }
+i32 Input::GetMouseX() const {
+    return m_mouseX;
+}
+i32 Input::GetMouseY() const {
+    return m_mouseY;
+}
 
-i32 Input::GetMouseDeltaX() const { return m_mouseX - m_mouseXLastFrame; }
-i32 Input::GetMouseDeltaY() const { return m_mouseY - m_mouseYLastFrame; }
+i32 Input::GetMouseDeltaX() const {
+    return m_mouseX - m_mouseXLastFrame;
+}
+i32 Input::GetMouseDeltaY() const {
+    return m_mouseY - m_mouseYLastFrame;
+}
 
-f32 Input::GetMouseWheelDelta() const { return m_mouseWheelDelta; }
+f32 Input::GetMouseWheelDelta() const {
+    return m_mouseWheelDelta;
+}
 
 } // namespace apex

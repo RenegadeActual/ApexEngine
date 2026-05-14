@@ -1,13 +1,13 @@
 #include "Log.h"
 
 #define _WIN32_WINNT 0x0A00
-#include <windows.h>  // for OutputDebugStringA and console color setup
+#include <windows.h> // for OutputDebugStringA and console color setup
 
 #include <cstdio>
-#include <cstdlib>     // for std::abort
-#include <ctime>       // for time, localtime_s, strftime
-#include <filesystem>  // for std::filesystem::create_directories
-#include <fstream>     // for std::ofstream
+#include <cstdlib>    // for std::abort
+#include <ctime>      // for time, localtime_s, strftime
+#include <filesystem> // for std::filesystem::create_directories
+#include <fstream>    // for std::ofstream
 #include <mutex>
 #include <new>
 #include <unordered_map>
@@ -28,10 +28,10 @@ Log* Log::s_instance = nullptr;
 namespace {
 
 struct LogState {
-    std::mutex                                 mutex;
-    std::ofstream                              file;
-    LogLevel                                   globalLevel = LogLevel::Info;
-    std::unordered_map<std::string, LogLevel>  categoryLevels;
+    std::mutex mutex;
+    std::ofstream file;
+    LogLevel globalLevel = LogLevel::Info;
+    std::unordered_map<std::string, LogLevel> categoryLevels;
 };
 
 LogState* g_state = nullptr;
@@ -39,25 +39,39 @@ LogState* g_state = nullptr;
 // ANSI color escape codes for severity levels in the console.
 const char* LevelColor(LogLevel level) {
     switch (level) {
-        case LogLevel::Trace: return "\033[90m"; // bright black (grey)
-        case LogLevel::Debug: return "\033[36m"; // cyan
-        case LogLevel::Info:  return "\033[37m"; // white
-        case LogLevel::Warn:  return "\033[33m"; // yellow
-        case LogLevel::Error: return "\033[31m"; // red
-        case LogLevel::Fatal: return "\033[91m"; // bright red
-        default:              return "\033[0m";  // reset
+    case LogLevel::Trace:
+        return "\033[90m"; // bright black (grey)
+    case LogLevel::Debug:
+        return "\033[36m"; // cyan
+    case LogLevel::Info:
+        return "\033[37m"; // white
+    case LogLevel::Warn:
+        return "\033[33m"; // yellow
+    case LogLevel::Error:
+        return "\033[31m"; // red
+    case LogLevel::Fatal:
+        return "\033[91m"; // bright red
+    default:
+        return "\033[0m"; // reset
     }
 }
 
 const char* LevelName(LogLevel level) {
     switch (level) {
-        case LogLevel::Trace: return "TRACE";
-        case LogLevel::Debug: return "DEBUG";
-        case LogLevel::Info:  return "INFO ";
-        case LogLevel::Warn:  return "WARN ";
-        case LogLevel::Error: return "ERROR";
-        case LogLevel::Fatal: return "FATAL";
-        default:              return "?????";
+    case LogLevel::Trace:
+        return "TRACE";
+    case LogLevel::Debug:
+        return "DEBUG";
+    case LogLevel::Info:
+        return "INFO ";
+    case LogLevel::Warn:
+        return "WARN ";
+    case LogLevel::Error:
+        return "ERROR";
+    case LogLevel::Fatal:
+        return "FATAL";
+    default:
+        return "?????";
     }
 }
 
@@ -92,9 +106,7 @@ std::string MakeLogFilename() {
 #endif
 
     char buffer[128] = {};
-    std::strftime(buffer, sizeof(buffer),
-                  "logs/apex_%Y-%m-%d_%H-%M-%S.log",
-                  &tm_local);
+    std::strftime(buffer, sizeof(buffer), "logs/apex_%Y-%m-%d_%H-%M-%S.log", &tm_local);
     return std::string(buffer);
 }
 
@@ -113,9 +125,12 @@ std::string MakeTimestamp() {
 #endif
 
     char buffer[32] = {};
-    std::snprintf(buffer, sizeof(buffer),
+    std::snprintf(buffer,
+                  sizeof(buffer),
                   "%02d:%02d:%02d.%03d",
-                  tm_local.tm_hour, tm_local.tm_min, tm_local.tm_sec,
+                  tm_local.tm_hour,
+                  tm_local.tm_min,
+                  tm_local.tm_sec,
                   static_cast<int>(ms.count()));
     return std::string(buffer);
 }
@@ -143,12 +158,12 @@ bool Log::Init() {
         return true;
     }
 
-    s_instance = new(std::nothrow) Log();
+    s_instance = new (std::nothrow) Log();
     if (s_instance == nullptr) {
         return false;
     }
 
-    g_state = new(std::nothrow) LogState();
+    g_state = new (std::nothrow) LogState();
     if (g_state == nullptr) {
         delete s_instance;
         s_instance = nullptr;
@@ -160,16 +175,14 @@ bool Log::Init() {
     std::filesystem::create_directories("logs", ec);
     if (ec) {
         // Non-fatal: we'll just lose file logging if this fails.
-        std::fprintf(stderr, "Log: failed to create logs/ directory: %s\n",
-                     ec.message().c_str());
+        std::fprintf(stderr, "Log: failed to create logs/ directory: %s\n", ec.message().c_str());
     }
 
     // Open the log file.
     std::string filename = MakeLogFilename();
     g_state->file.open(filename, std::ios::out | std::ios::trunc);
     if (!g_state->file.is_open()) {
-        std::fprintf(stderr, "Log: failed to open log file '%s'\n",
-                     filename.c_str());
+        std::fprintf(stderr, "Log: failed to open log file '%s'\n", filename.c_str());
         // Still return true — we can log to console even without file output.
     }
 
@@ -196,19 +209,22 @@ Log& Log::Get() {
 }
 
 void Log::SetGlobalLevel(LogLevel level) {
-    if (g_state == nullptr) return;
+    if (g_state == nullptr)
+        return;
     std::lock_guard<std::mutex> lock(g_state->mutex);
     g_state->globalLevel = level;
 }
 
 void Log::SetCategoryLevel(std::string_view category, LogLevel level) {
-    if (g_state == nullptr) return;
+    if (g_state == nullptr)
+        return;
     std::lock_guard<std::mutex> lock(g_state->mutex);
     g_state->categoryLevels[std::string(category)] = level;
 }
 
 bool Log::IsEnabled(LogLevel level, std::string_view category) const {
-    if (g_state == nullptr) return false;
+    if (g_state == nullptr)
+        return false;
 
     // Per-category level overrides global level if set.
     // We do a hash-map lookup without locking for performance; in practice
@@ -216,9 +232,7 @@ bool Log::IsEnabled(LogLevel level, std::string_view category) const {
     // runtime, a torn read is benign (worst case: one message slips through
     // or gets dropped right at the moment of change).
     auto it = g_state->categoryLevels.find(std::string(category));
-    LogLevel threshold = (it != g_state->categoryLevels.end())
-                       ? it->second
-                       : g_state->globalLevel;
+    LogLevel threshold = (it != g_state->categoryLevels.end()) ? it->second : g_state->globalLevel;
 
     return static_cast<u32>(level) >= static_cast<u32>(threshold);
 }
@@ -228,13 +242,14 @@ void Log::Emit(LogLevel level,
                const char* file,
                int line,
                std::string_view message) {
-    if (g_state == nullptr) return;
+    if (g_state == nullptr)
+        return;
 
     std::lock_guard<std::mutex> lock(g_state->mutex);
 
     const std::string timestamp = MakeTimestamp();
     const char* levelName = LevelName(level);
-    const char* fileName  = BaseName(file);
+    const char* fileName = BaseName(file);
 
     // Console output (with colors).
     std::fprintf(stdout,
@@ -243,9 +258,11 @@ void Log::Emit(LogLevel level,
                  timestamp.c_str(),
                  levelName,
                  std::string(category).c_str(),
-                 static_cast<int>(message.size()), message.data(),
+                 static_cast<int>(message.size()),
+                 message.data(),
                  kResetColor,
-                 fileName, line);
+                 fileName,
+                 line);
     std::fflush(stdout);
 
     // Also write to OutputDebugString so the message shows up in the
@@ -253,13 +270,16 @@ void Log::Emit(LogLevel level,
     // No colors; that channel doesn't understand them.
     {
         char debugBuffer[1024];
-        std::snprintf(debugBuffer, sizeof(debugBuffer),
+        std::snprintf(debugBuffer,
+                      sizeof(debugBuffer),
                       "[%s] [%s] [%s] %.*s (%s:%d)\n",
                       timestamp.c_str(),
                       levelName,
                       std::string(category).c_str(),
-                      static_cast<int>(message.size()), message.data(),
-                      fileName, line);
+                      static_cast<int>(message.size()),
+                      message.data(),
+                      fileName,
+                      line);
         OutputDebugStringA(debugBuffer);
     }
 
@@ -267,9 +287,8 @@ void Log::Emit(LogLevel level,
     if (g_state->file.is_open()) {
         g_state->file << "[" << timestamp << "] "
                       << "[" << levelName << "] "
-                      << "[" << category << "] "
-                      << message
-                      << " (" << fileName << ":" << line << ")\n";
+                      << "[" << category << "] " << message << " (" << fileName << ":" << line
+                      << ")\n";
         g_state->file.flush();
     }
 
