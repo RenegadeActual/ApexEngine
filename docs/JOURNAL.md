@@ -89,3 +89,104 @@ deletes the window on exit. Way cleaner.
 
 - Refactor main.cpp's `delete window` into std::unique_ptr for proper RAII
 - Maybe: start initializing Vulkan
+
+## 2026-05-13 — Keyboard and mouse input system
+
+Built a singleton-based input system. apex::Input::Init() / Shutdown() /
+Get() lifecycle, with platform-independent Key and MouseButton enums.
+Window.cpp translates Win32 virtual key codes into engine Key values and
+feeds events to the singleton.
+
+### Design decisions
+
+- **Singleton (Architecture C).** Init/Shutdown explicit lifecycle, not the
+  Meyers lazy-init pattern. Reasoning: future subsystems (renderer, audio)
+  will have init order dependencies, so explicit ordering matters. Better
+  to use one consistent pattern for all engine subsystems.
+
+- **Polled input, not event-driven.** Game code asks "is W down?" rather
+  than subscribing to callbacks. Standard for games — fits the per-frame
+  loop and keeps logic together instead of scattered across handlers.
+
+- **Two-array state pattern.** m_keysDown (current) + m_keysDownLastFrame
+  (snapshot). NewFrame() copies current into last. IsKeyDown reads current;
+  WasKeyPressed/WasKeyReleased compare them. Cheap and elegant.
+
+- **"Is" vs "Was" naming convention.** Is = current state, Was = edge this
+  frame. Adopt consistently across the engine.
+
+- **Count sentinel in enums.** Last value of Key and MouseButton enums is
+  Count, used to size state arrays. Adding a key auto-updates array sizes
+  everywhere.
+
+### Win32 details worth remembering
+
+- **Auto-repeat filtering.** WM_KEYDOWN fires repeatedly while a key is
+  held. Bit 30 of lParam is 1 if the key was already down before this
+  message (i.e. it's a repeat). Check (lParam & (1 << 30)) and skip if set.
+
+- **WM_KEYDOWN vs WM_SYSKEYDOWN.** SYSKEYDOWN fires when Alt is held. Treat
+  identically for our purposes.
+
+- **SetCapture / ReleaseCapture for mouse buttons.** Without capture, mouse
+  events stop when the cursor leaves the window. Capture on button-down,
+  release on button-up.
+
+- **GET_X_LPARAM / GET_Y_LPARAM, not LOWORD/HIWORD, for mouse coords.**
+  These handle sign extension correctly — coords can be negative when the
+  mouse is captured and moves off the window's top/left edge. Lives in
+  windowsx.h, separate from windows.h.
+
+- **Mouse wheel delta is in HIWORD(wParam), signed (cast to i16).**
+  Standard notch is ±120 units; divide by 120 to get clean ±1 per notch.
+
+- **WM_KILLFOCUS handler.** Clear all input state when window loses focus,
+  so keys held during an alt-tab don't appear stuck when focus returns.
+
+- **VK_LMENU / VK_RMENU = Alt keys.** "Menu" is Microsoft's old name for
+  Alt. Confusing.
+
+### Bug hit and lesson learned
+
+In WM_KEYUP handler I called OnKeyDown instead of OnKeyUp — classic
+copy-paste from the WM_KEYDOWN block where I forgot to change the method
+name. Symptom: "Space pressed" fires but "Space released" never does,
+because the input system thinks the key is still held. WasKeyPressed also
+stops firing on subsequent presses because the auto-repeat filter sees
+the (stuck) down state and skips it.
+
+**Lesson: when two case blocks look almost identical, the bug is almost
+certainly in the one tiny part that differs.** Code that's symmetric
+visually is exactly where you forget to flip one detail. Worth scanning
+for this pattern any time you copy-paste a case block.
+
+**Tool lesson: a breakpoint in OnKeyUp would have proven instantly that
+the function was never called.** Reach for the debugger when behavior
+contradicts what the code "should" do — it's faster than re-reading the
+source for the third time.
+
+### What's NOT in the input system yet (deferred)
+
+- Gamepad support
+- Text input (WM_CHAR, IME)
+- Raw input mode for FPS cameras (DirectInput / RawInput API)
+- Input contexts / consume mechanism (for routing input between editor
+  and game eventually)
+- Re-syncing state on WM_SETFOCUS by querying currently-held keys
+- Asserting in Input::Get() that Init() was called (waiting on logging
+  system to give us a real assert macro)
+- Real UTF-8 to UTF-16 conversion for window titles (still byte-casting)
+
+### Files at end of this session
+
+- Input.h, Input.cpp — new
+- Window.cpp — added keyboard/mouse handling + virtual key translation
+- main.cpp — wired up Init/Shutdown/NewFrame and test prints
+- CMakeLists.txt — added Input.cpp to source list
+
+### Next steps
+
+- Logging system (printf is fine but real engine needs levels, timestamps,
+  file output)
+- After logging: add asserts to Input::Get() and other invariant checks
+- Then: Vulkan
