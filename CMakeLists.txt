@@ -12,6 +12,7 @@ add_executable(apex
     main.cpp
     Window.cpp
     Input.cpp
+    Log.cpp
 )
 
 target_compile_options(apex PRIVATE

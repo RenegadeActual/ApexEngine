@@ -1,5 +1,6 @@
 #include "Window.h"
 #include "Input.h"
+#include "Log.h"
 
 #define _WIN32_WINNT 0x0A00 // Target Windows 10 or later
 #include <windows.h>
@@ -254,7 +255,7 @@ static bool RegisterWindowClass() {
     wc.lpszClassName = kWindowClassName; // Set the window class name
 
     if (RegisterClassExW(&wc) == 0) {
-        std::printf("RegisterClassExW failed. Error code: %lu\n", GetLastError());
+        LOG_ERROR("Window","RegisterClassExW failed. Error code: %lu\n", GetLastError());
         return false;
     }
 
@@ -333,7 +334,7 @@ Window* Window::Create(std::string_view title, u32 width, u32 height) {
     );
 
     if (hwnd == nullptr) {
-        std::printf("CreateWindowExW failed. Error: %lu\n", GetLastError());
+        LOG_ERROR("Window", "CreateWindowExW failed. Error: %lu\n", GetLastError());
         delete window;
         return nullptr;
     }

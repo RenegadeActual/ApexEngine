@@ -190,3 +190,82 @@ source for the third time.
   file output)
 - After logging: add asserts to Input::Get() and other invariant checks
 - Then: Vulkan
+
+## 2026-05-13 (later) — Logging system
+
+Built a singleton-based logging system with severity levels, per-category
+thresholds, console + file + OutputDebugString sinks, ANSI colors on the
+console, and timestamped log files in logs/.
+
+### Design decisions
+
+- **Singleton with explicit Init/Shutdown lifecycle** (consistent with Input).
+- **All six severity levels** (Trace, Debug, Info, Warn, Error, Fatal) plus
+  Off as a threshold sentinel.
+- **Per-category levels**, defaulting to global default. Stored in
+  unordered_map<string, LogLevel>.
+- **std::format for the format string syntax.** Compile-time-checked when
+  using literal format strings (which is 100% of our case). NOT
+  printf-style — uses {} placeholders.
+- **State in file-scope (anonymous namespace) instead of Log members.**
+  Keeps <mutex>, <fstream>, <unordered_map> out of Log.h, reducing
+  compile-time dependencies for every file that includes Log.h.
+- **Log files: logs/apex_YYYY-MM-DD_HH-MM-SS.log, one per run.**
+- **LOG_FATAL calls std::abort() after logging.** Unrecoverable error =
+  don't trust the program to clean up gracefully.
+- **Macros wrap the API** so __FILE__ and __LINE__ are captured at the
+  call site, and so the IsEnabled() check runs before any std::format
+  work.
+
+### Win32 details
+
+- **EnableConsoleColors() via ENABLE_VIRTUAL_TERMINAL_PROCESSING.**
+  Without this, ANSI codes print literally instead of being interpreted.
+  Set once at startup on the stdout handle.
+- **localtime_s for thread-safe local time conversion on Windows.**
+  Regular localtime returns a static buffer and isn't thread-safe.
+- **OutputDebugStringA so log messages appear in the debugger's output
+  window** when running under F5 in VS Code.
+
+### Bugs hit and lessons
+
+**Bug 1: std::format silently accepts wrong format specifiers.**
+I wrote `LOG_DEBUG("Input", "...at (%d, %d)...", x, y)` — printf-style.
+std::format is fine with that string (it has zero {} placeholders) and
+silently ignores the two extra arguments. Output had literal "%d, %d" in
+it. Compiler did NOT warn. Lesson: must mentally switch from printf to
+std::format syntax. Brace-style: `({}, {})`.
+
+**Bug 2: Subsystem shutdown order matters.**
+Window's WndProc calls Input::Get() during message dispatch. When
+DestroyWindow fires WM_KILLFOCUS (which it does during teardown), my old
+shutdown order had already called Input::Shutdown() — so Input::Get()
+dereferenced a null pointer and the program died silently between two
+log calls. Fixed by reversing init order: Input before Window in init,
+so that shutdown order Window-then-Input has dependencies correctly
+unwound.
+
+**Lesson: shutdown order isn't always the reverse of init order — it
+depends on the dependency graph.** Window depends on Input → Window
+must be destroyed first → Input must be initialized first. The general
+rule: subsystems with dependents go down last.
+
+**Lesson: silent program death between log calls is almost always
+"something in between crashed."** Use printf-debugging (in this case
+log-debugging) by adding messages around each suspect call to bisect
+which one is the killer.
+
+### Files at end of session
+
+- Log.h, Log.cpp — new
+- main.cpp — wired up Log, reordered Input/Window init
+- Window.cpp — replaced printf with LOG_ERROR
+- CMakeLists.txt — added Log.cpp
+- .gitignore — added logs/
+
+### Next steps
+
+- Code cleanup pass with clang-format
+- Doxygen setup + documentation pass on public API
+- GitHub Pages hosting
+- Then: Vulkan
