@@ -36,3 +36,7 @@ desktop.ini
 
 # Generated shader cache (we'll create this later)
 *.spv
+
+# Logs
+logs/
+*.log
