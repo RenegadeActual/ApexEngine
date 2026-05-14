@@ -9,10 +9,10 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 set (CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 add_executable(apex 
-    main.cpp
-    Window.cpp
-    Input.cpp
-    Log.cpp
+    src/main.cpp
+    src/Window.cpp
+    src/Input.cpp
+    src/Log.cpp
 )
 
 target_compile_options(apex PRIVATE
