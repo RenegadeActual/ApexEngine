@@ -135,7 +135,7 @@ public:
 
     /// Access the singleton instance.
     /// @pre @ref Init has been called and has not been followed by @ref Shutdown.
-    /// @warning Dereferences a null pointer if called before @ref Init.
+    ///      Violating the precondition triggers an assertion in debug builds.
     static Input& Get();
 
     /// @cond

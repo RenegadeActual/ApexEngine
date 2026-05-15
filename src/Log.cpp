@@ -1,5 +1,7 @@
 #include "Log.h"
 
+#include "Assert.h"
+
 #define _WIN32_WINNT 0x0A00
 #include <windows.h> // for OutputDebugStringA and console color setup
 
@@ -205,6 +207,7 @@ void Log::Shutdown() {
 }
 
 Log& Log::Get() {
+    APEX_ASSERT(s_instance != nullptr, "Log::Get() called before Log::Init()");
     return *s_instance;
 }
 

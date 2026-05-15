@@ -1,4 +1,7 @@
 #include "Input.h"
+
+#include "Assert.h"
+
 #include <new>
 
 namespace apex {
@@ -35,9 +38,7 @@ void Input::Shutdown() {
 }
 
 Input& Input::Get() {
-    // Note: dereferencing s_instance if it's null is undefined behavior.
-    // We rely on the caller having called Init() first. In a more defensive
-    // engine we might assert here.
+    APEX_ASSERT(s_instance != nullptr, "Input::Get() called before Input::Init()");
     return *s_instance;
 }
 
@@ -70,30 +71,26 @@ void Input::NewFrame() {
 
 void Input::OnKeyDown(Key key) {
     const size_t i = static_cast<size_t>(key);
-    if (i < kKeyCount) {
-        m_keysDown[i] = true;
-    }
+    APEX_ASSERT(i < kKeyCount, "Key index out of range: {}", i);
+    m_keysDown[i] = true;
 }
 
 void Input::OnKeyUp(Key key) {
     const size_t i = static_cast<size_t>(key);
-    if (i < kKeyCount) {
-        m_keysDown[i] = false;
-    }
+    APEX_ASSERT(i < kKeyCount, "Key index out of range: {}", i);
+    m_keysDown[i] = false;
 }
 
 void Input::OnMouseButtonDown(MouseButton button) {
     const size_t i = static_cast<size_t>(button);
-    if (i < kMouseCount) {
-        m_mouseDown[i] = true;
-    }
+    APEX_ASSERT(i < kMouseCount, "MouseButton index out of range: {}", i);
+    m_mouseDown[i] = true;
 }
 
 void Input::OnMouseButtonUp(MouseButton button) {
     const size_t i = static_cast<size_t>(button);
-    if (i < kMouseCount) {
-        m_mouseDown[i] = false;
-    }
+    APEX_ASSERT(i < kMouseCount, "MouseButton index out of range: {}", i);
+    m_mouseDown[i] = false;
 }
 
 void Input::OnMouseMove(i32 x, i32 y) {

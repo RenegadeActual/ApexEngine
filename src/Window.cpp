@@ -1,4 +1,6 @@
 #include "Window.h"
+
+#include "Assert.h"
 #include "Input.h"
 #include "Log.h"
 
@@ -416,6 +418,7 @@ Window* Window::Create(std::string_view title, u32 width, u32 height) {
 
 // process any messages that have arrived since the last call. Non-blocking.
 void Window::PollEvents() {
+    APEX_ASSERT(m_impl != nullptr, "Window has no platform impl");
     MSG msg = {};
     while (PeekMessageW(&msg, m_impl->hwnd, 0, 0, PM_REMOVE)) {
         TranslateMessage(&msg);
@@ -424,14 +427,17 @@ void Window::PollEvents() {
 }
 
 bool Window::ShouldClose() const {
+    APEX_ASSERT(m_impl != nullptr, "Window has no platform impl");
     return m_impl->shouldClose;
 }
 
 u32 Window::GetWidth() const {
+    APEX_ASSERT(m_impl != nullptr, "Window has no platform impl");
     return m_impl->width;
 }
 
 u32 Window::GetHeight() const {
+    APEX_ASSERT(m_impl != nullptr, "Window has no platform impl");
     return m_impl->height;
 }
 
