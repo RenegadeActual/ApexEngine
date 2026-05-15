@@ -4,58 +4,79 @@
 
 #include <string_view>
 
+/// @file Window.h
+/// @brief Platform window abstraction.
+
 namespace apex {
 
-// ------------------------------------------------------------------------------
-// Forward declaration of the platform-specific implementation struct.
-//
-// Uses PIMPL (Pointer to Implementation) idiom to hide platform-specific details from the public
-// interface. The actual definition of Impl will be in the corresponding .cpp file and will contain
-// all the platform-specific members and logic.
-// ------------------------------------------------------------------------------
+/// Opaque platform-specific implementation type for Window.
+///
+/// Forward-declared here so that platform headers (`windows.h` on Win32)
+/// stay out of the public interface. The actual definition lives in
+/// Window.cpp. This is the PIMPL (Pointer to Implementation) idiom.
 struct WindowImpl;
 
-// ------------------------------------------------------------------------------
-// A platform window.
-//
-// Constructed via the static Create() factory function; check the returned optional for success.
-// The constructor is private since you can't signal failure without exceptions (which we don't want
-// to use).
-// ------------------------------------------------------------------------------
+/// A platform window.
+///
+/// Owns an OS-level window handle and the associated event-loop machinery.
+/// Instances are created via the static @ref Create factory function — the
+/// constructor is private because, without exceptions, a constructor cannot
+/// signal failure to its caller. @ref Create returns nullptr on failure.
+///
+/// Windows are non-copyable and non-movable; they own platform resources
+/// whose lifetimes cannot be safely transferred.
 class Window {
 public:
     // ---- Creation/Destruction ----
-    // Factory function to create a Window instance.
-    // Caller owns the returned pointer and is responsible for deleting it when done.
+
+    /// Create a new window.
+    ///
+    /// @param title  Caption shown in the title bar. UTF-8 (currently
+    ///               truncated to ASCII at the Win32 boundary).
+    /// @param width  Initial client-area width in pixels.
+    /// @param height Initial client-area height in pixels.
+    /// @return       Owning pointer to the new Window, or nullptr on failure.
+    ///               The caller is responsible for `delete`-ing it.
     static Window* Create(std::string_view title, u32 width, u32 height);
 
+    /// Destroy the window and release its OS handle.
     ~Window();
 
-    // Non-copyable and non-movable to prevent accidental copying or moving of the window instance,
-    // which could lead to resource management issues.
+    /// @cond
     Window(const Window&) = delete;
     Window& operator=(const Window&) = delete;
     Window(Window&&) = delete;
     Window& operator=(Window&&) = delete;
+    /// @endcond
 
     // ---- Operations ----
-    // Process pending OS events. Call once per frame.
+
+    /// Process all pending OS events for this window. Non-blocking.
+    ///
+    /// Call once per frame. Drains the message queue and dispatches
+    /// keyboard, mouse, focus, resize, and close events.
     void PollEvents();
 
-    // Returns true if the window should close (e.g. user clicked the close button/ALT-F4).
+    /// True if the user has requested the window be closed.
+    ///
+    /// Set when the user clicks the close button, presses Alt+F4, or the
+    /// OS otherwise asks the window to terminate. The application is
+    /// expected to poll this and exit its main loop accordingly.
     bool ShouldClose() const;
 
     // ---- Queries ----
 
+    /// Current client-area width, in pixels.
     u32 GetWidth() const;
+
+    /// Current client-area height, in pixels.
     u32 GetHeight() const;
 
 private:
-    // Private constructor: Clients use Create() instead.
+    /// Private constructor. Clients use @ref Create instead.
     Window();
 
-    // Owned Platform-specific state. Defined in Window.cpp
-    WindowImpl* m_impl = nullptr;
+    WindowImpl* m_impl = nullptr; ///< Owned platform-specific state. Defined in Window.cpp.
 };
 
 } // namespace apex
