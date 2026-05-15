@@ -2,12 +2,9 @@
 #include "Log.h"
 #include "Window.h"
 
-
 #include <cstdio>
 
 int main() {
-    // Initialize logging first so we can see log messages from the rest of the initialization
-    // process.
     if (!apex::Log::Init()) {
         std::fprintf(stderr, "Failed to initialize logging. \n");
         return 1;
@@ -15,8 +12,7 @@ int main() {
 
     LOG_INFO("Engine", "Starting ApexEngine...");
 
-    apex::Log::Get().SetCategoryLevel(
-        "Input", apex::LogLevel::Debug); // enable debug logs for the "Input" category
+    apex::Log::Get().SetCategoryLevel("Input", apex::LogLevel::Debug);
     apex::Log::Get().SetCategoryLevel("Engine", apex::LogLevel::Debug);
 
     // initialize input system
@@ -34,11 +30,10 @@ int main() {
     LOG_INFO("Engine", "Initialization complete. Entering main loop.");
 
     while (!window->ShouldClose()) {
-        apex::Input::Get().NewFrame(); // snapshot input state at the start of the frame
+        apex::Input::Get().NewFrame();
         window->PollEvents();
 
-        apex::Input& input = apex::Input::Get(); // cache apex::Input::Get() to prevent multiple
-                                                 // calls in the same frame
+        apex::Input& input = apex::Input::Get();
 
         if (input.WasKeyPressed(apex::Key::Space)) {
             LOG_DEBUG("Input", "Space was pressed.");
