@@ -206,6 +206,91 @@ static Key TranslateVirtualKey(WPARAM vk) {
 }
 
 // ------------------------------------------------------------------------------
+// Translate an engine Key value back to the corresponding Win32 virtual key code.
+// Inverse of TranslateVirtualKey. Returns 0 for Key::Unknown or out-of-range values.
+// ------------------------------------------------------------------------------
+static int KeyToVirtualKey(Key key) {
+    switch (key) {
+    // Letters:
+    case Key::A: return 'A';
+    case Key::B: return 'B';
+    case Key::C: return 'C';
+    case Key::D: return 'D';
+    case Key::E: return 'E';
+    case Key::F: return 'F';
+    case Key::G: return 'G';
+    case Key::H: return 'H';
+    case Key::I: return 'I';
+    case Key::J: return 'J';
+    case Key::K: return 'K';
+    case Key::L: return 'L';
+    case Key::M: return 'M';
+    case Key::N: return 'N';
+    case Key::O: return 'O';
+    case Key::P: return 'P';
+    case Key::Q: return 'Q';
+    case Key::R: return 'R';
+    case Key::S: return 'S';
+    case Key::T: return 'T';
+    case Key::U: return 'U';
+    case Key::V: return 'V';
+    case Key::W: return 'W';
+    case Key::X: return 'X';
+    case Key::Y: return 'Y';
+    case Key::Z: return 'Z';
+
+    // Digits:
+    case Key::Num0: return '0';
+    case Key::Num1: return '1';
+    case Key::Num2: return '2';
+    case Key::Num3: return '3';
+    case Key::Num4: return '4';
+    case Key::Num5: return '5';
+    case Key::Num6: return '6';
+    case Key::Num7: return '7';
+    case Key::Num8: return '8';
+    case Key::Num9: return '9';
+
+    // Function keys:
+    case Key::F1: return VK_F1;
+    case Key::F2: return VK_F2;
+    case Key::F3: return VK_F3;
+    case Key::F4: return VK_F4;
+    case Key::F5: return VK_F5;
+    case Key::F6: return VK_F6;
+    case Key::F7: return VK_F7;
+    case Key::F8: return VK_F8;
+    case Key::F9: return VK_F9;
+    case Key::F10: return VK_F10;
+    case Key::F11: return VK_F11;
+    case Key::F12: return VK_F12;
+
+    // Arrows:
+    case Key::Left: return VK_LEFT;
+    case Key::Right: return VK_RIGHT;
+    case Key::Up: return VK_UP;
+    case Key::Down: return VK_DOWN;
+
+    // Modifiers:
+    case Key::LeftShift: return VK_LSHIFT;
+    case Key::RightShift: return VK_RSHIFT;
+    case Key::LeftCtrl: return VK_LCONTROL;
+    case Key::RightCtrl: return VK_RCONTROL;
+    case Key::LeftAlt: return VK_LMENU;
+    case Key::RightAlt: return VK_RMENU;
+
+    // Specials:
+    case Key::Space: return VK_SPACE;
+    case Key::Enter: return VK_RETURN;
+    case Key::Escape: return VK_ESCAPE;
+    case Key::Tab: return VK_TAB;
+    case Key::Backspace: return VK_BACK;
+
+    default: return 0;
+    }
+}
+
+// ------------------------------------------------------------------------------
 // Clear all input states. Called when window loses focus to prevent "stuck keys" when the user
 // alt-tabs away with a key pressed.
 // ------------------------------------------------------------------------------
@@ -215,6 +300,52 @@ static void ClearInputState() {
     }
     for (u32 i = 0; i < static_cast<u32>(MouseButton::Count); ++i) {
         Input::Get().OnMouseButtonUp(static_cast<MouseButton>(i));
+    }
+}
+
+// ------------------------------------------------------------------------------
+// Re-sync the input state from the OS. Called when the window regains focus so
+// that keys held during the alt-tab away show up as held when the user returns,
+// and keys released while we weren't listening don't appear stuck.
+//
+// GetAsyncKeyState reports the actual current keyboard state at the hardware
+// level. The high bit (0x8000) is set if the key is currently down.
+// ------------------------------------------------------------------------------
+static void SyncInputState() {
+    // Skip Key::Unknown (index 0) — it has no virtual-key mapping.
+    for (u32 i = 1; i < static_cast<u32>(Key::Count); ++i) {
+        const Key key = static_cast<Key>(i);
+        const int vk = KeyToVirtualKey(key);
+        if (vk == 0) {
+            continue;
+        }
+        const bool isDown = (GetAsyncKeyState(vk) & 0x8000) != 0;
+        if (isDown) {
+            Input::Get().OnKeyDown(key);
+        } else {
+            Input::Get().OnKeyUp(key);
+        }
+    }
+
+    // Mouse buttons. VK_LBUTTON/RBUTTON/MBUTTON are virtual-key codes for
+    // the physical buttons, queryable the same way as keyboard keys.
+    const bool leftDown = (GetAsyncKeyState(VK_LBUTTON) & 0x8000) != 0;
+    const bool rightDown = (GetAsyncKeyState(VK_RBUTTON) & 0x8000) != 0;
+    const bool middleDown = (GetAsyncKeyState(VK_MBUTTON) & 0x8000) != 0;
+    if (leftDown) {
+        Input::Get().OnMouseButtonDown(MouseButton::Left);
+    } else {
+        Input::Get().OnMouseButtonUp(MouseButton::Left);
+    }
+    if (rightDown) {
+        Input::Get().OnMouseButtonDown(MouseButton::Right);
+    } else {
+        Input::Get().OnMouseButtonUp(MouseButton::Right);
+    }
+    if (middleDown) {
+        Input::Get().OnMouseButtonDown(MouseButton::Middle);
+    } else {
+        Input::Get().OnMouseButtonUp(MouseButton::Middle);
     }
 }
 
@@ -318,7 +449,12 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPara
         return 0;
     }
 
-    // ----- Focus Loss -----
+    // ----- Focus -----
+    case WM_SETFOCUS:
+        // Window regained focus. Re-sync input state from the OS so that
+        // keys held during the alt-tab show up correctly.
+        SyncInputState();
+        return 0;
     case WM_KILLFOCUS:
         // Window lost focus, clear all input states
         ClearInputState();
