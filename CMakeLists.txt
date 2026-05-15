@@ -20,6 +20,7 @@ add_executable(apex
     src/Input.cpp
     src/Log.cpp
     src/Assert.cpp
+    src/Renderer.cpp
 )
 
 target_compile_options(apex PRIVATE

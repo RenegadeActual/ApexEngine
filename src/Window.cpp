@@ -43,12 +43,8 @@ static int Utf8ToUtf16(std::string_view src, wchar_t* dst, int dstCapacity) {
     if (src.empty()) {
         return 0;
     }
-    const int written = MultiByteToWideChar(CP_UTF8,
-                                            0,
-                                            src.data(),
-                                            static_cast<int>(src.size()),
-                                            dst,
-                                            dstCapacity - 1);
+    const int written = MultiByteToWideChar(
+        CP_UTF8, 0, src.data(), static_cast<int>(src.size()), dst, dstCapacity - 1);
     if (written <= 0) {
         return 0;
     }
@@ -212,81 +208,145 @@ static Key TranslateVirtualKey(WPARAM vk) {
 static int KeyToVirtualKey(Key key) {
     switch (key) {
     // Letters:
-    case Key::A: return 'A';
-    case Key::B: return 'B';
-    case Key::C: return 'C';
-    case Key::D: return 'D';
-    case Key::E: return 'E';
-    case Key::F: return 'F';
-    case Key::G: return 'G';
-    case Key::H: return 'H';
-    case Key::I: return 'I';
-    case Key::J: return 'J';
-    case Key::K: return 'K';
-    case Key::L: return 'L';
-    case Key::M: return 'M';
-    case Key::N: return 'N';
-    case Key::O: return 'O';
-    case Key::P: return 'P';
-    case Key::Q: return 'Q';
-    case Key::R: return 'R';
-    case Key::S: return 'S';
-    case Key::T: return 'T';
-    case Key::U: return 'U';
-    case Key::V: return 'V';
-    case Key::W: return 'W';
-    case Key::X: return 'X';
-    case Key::Y: return 'Y';
-    case Key::Z: return 'Z';
+    case Key::A:
+        return 'A';
+    case Key::B:
+        return 'B';
+    case Key::C:
+        return 'C';
+    case Key::D:
+        return 'D';
+    case Key::E:
+        return 'E';
+    case Key::F:
+        return 'F';
+    case Key::G:
+        return 'G';
+    case Key::H:
+        return 'H';
+    case Key::I:
+        return 'I';
+    case Key::J:
+        return 'J';
+    case Key::K:
+        return 'K';
+    case Key::L:
+        return 'L';
+    case Key::M:
+        return 'M';
+    case Key::N:
+        return 'N';
+    case Key::O:
+        return 'O';
+    case Key::P:
+        return 'P';
+    case Key::Q:
+        return 'Q';
+    case Key::R:
+        return 'R';
+    case Key::S:
+        return 'S';
+    case Key::T:
+        return 'T';
+    case Key::U:
+        return 'U';
+    case Key::V:
+        return 'V';
+    case Key::W:
+        return 'W';
+    case Key::X:
+        return 'X';
+    case Key::Y:
+        return 'Y';
+    case Key::Z:
+        return 'Z';
 
     // Digits:
-    case Key::Num0: return '0';
-    case Key::Num1: return '1';
-    case Key::Num2: return '2';
-    case Key::Num3: return '3';
-    case Key::Num4: return '4';
-    case Key::Num5: return '5';
-    case Key::Num6: return '6';
-    case Key::Num7: return '7';
-    case Key::Num8: return '8';
-    case Key::Num9: return '9';
+    case Key::Num0:
+        return '0';
+    case Key::Num1:
+        return '1';
+    case Key::Num2:
+        return '2';
+    case Key::Num3:
+        return '3';
+    case Key::Num4:
+        return '4';
+    case Key::Num5:
+        return '5';
+    case Key::Num6:
+        return '6';
+    case Key::Num7:
+        return '7';
+    case Key::Num8:
+        return '8';
+    case Key::Num9:
+        return '9';
 
     // Function keys:
-    case Key::F1: return VK_F1;
-    case Key::F2: return VK_F2;
-    case Key::F3: return VK_F3;
-    case Key::F4: return VK_F4;
-    case Key::F5: return VK_F5;
-    case Key::F6: return VK_F6;
-    case Key::F7: return VK_F7;
-    case Key::F8: return VK_F8;
-    case Key::F9: return VK_F9;
-    case Key::F10: return VK_F10;
-    case Key::F11: return VK_F11;
-    case Key::F12: return VK_F12;
+    case Key::F1:
+        return VK_F1;
+    case Key::F2:
+        return VK_F2;
+    case Key::F3:
+        return VK_F3;
+    case Key::F4:
+        return VK_F4;
+    case Key::F5:
+        return VK_F5;
+    case Key::F6:
+        return VK_F6;
+    case Key::F7:
+        return VK_F7;
+    case Key::F8:
+        return VK_F8;
+    case Key::F9:
+        return VK_F9;
+    case Key::F10:
+        return VK_F10;
+    case Key::F11:
+        return VK_F11;
+    case Key::F12:
+        return VK_F12;
 
     // Arrows:
-    case Key::Left: return VK_LEFT;
-    case Key::Right: return VK_RIGHT;
-    case Key::Up: return VK_UP;
-    case Key::Down: return VK_DOWN;
+    case Key::Left:
+        return VK_LEFT;
+    case Key::Right:
+        return VK_RIGHT;
+    case Key::Up:
+        return VK_UP;
+    case Key::Down:
+        return VK_DOWN;
 
     // Modifiers:
-    case Key::LeftShift: return VK_LSHIFT;
-    case Key::RightShift: return VK_RSHIFT;
-    case Key::LeftCtrl: return VK_LCONTROL;
-    case Key::RightCtrl: return VK_RCONTROL;
-    case Key::LeftAlt: return VK_LMENU;
-    case Key::RightAlt: return VK_RMENU;
+    case Key::LeftShift:
+        return VK_LSHIFT;
+    case Key::RightShift:
+        return VK_RSHIFT;
+    case Key::LeftCtrl:
+        return VK_LCONTROL;
+    case Key::RightCtrl:
+        return VK_RCONTROL;
+    case Key::LeftAlt:
+        return VK_LMENU;
+    case Key::RightAlt:
+        return VK_RMENU;
 
     // Specials:
-    case Key::Space: return VK_SPACE;
-    case Key::Enter: return VK_RETURN;
-    case Key::Escape: return VK_ESCAPE;
-    case Key::Tab: return VK_TAB;
-    case Key::Backspace: return VK_BACK;
+    case Key::Space:
+        return VK_SPACE;
+    case Key::Enter:
+        return VK_RETURN;
+    case Key::Escape:
+        return VK_ESCAPE;
+    case Key::Tab:
+        return VK_TAB;
+    case Key::Backspace:
+        return VK_BACK;
 
-    default: return 0;
+    default:
+        return 0;
     }
 }
 
@@ -597,6 +657,11 @@ u32 Window::GetWidth() const {
 u32 Window::GetHeight() const {
     APEX_ASSERT(m_impl != nullptr, "Window has no platform impl");
     return m_impl->height;
+}
+
+void* Window::GetNativeHandle() const {
+    APEX_ASSERT(m_impl != nullptr, "Window has no platform impl");
+    return m_impl->hwnd;
 }
 
 } // namespace apex

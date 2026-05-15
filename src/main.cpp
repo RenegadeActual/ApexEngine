@@ -1,5 +1,6 @@
 #include "Input.h"
 #include "Log.h"
+#include "Renderer.h"
 #include "Window.h"
 
 #include <cstdio>
@@ -25,6 +26,11 @@ int main() {
     std::unique_ptr<apex::Window> window(apex::Window::Create("Apex Engine - Alpha", 1280, 720));
     if (!window) {
         LOG_FATAL("Engine", "Failed to create window.\n");
+        return 1;
+    }
+
+    if (!apex::Renderer::Init(window.get())) {
+        LOG_FATAL("Engine", "Failed to initialize renderer.\n");
         return 1;
     }
 
@@ -55,6 +61,8 @@ int main() {
 
         // Eventually: renderer.DrawFrame();
     }
+
+    apex::Renderer::Shutdown();
 
     // Destroy the window before tearing down Input. The window's destructor
     // can dispatch a final WM_KILLFOCUS via DestroyWindow, which calls into

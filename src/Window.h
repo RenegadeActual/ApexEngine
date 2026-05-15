@@ -71,6 +71,9 @@ public:
     /// Current client-area height, in pixels.
     u32 GetHeight() const;
 
+    /// Opaque platform-native window handle. Caller is expected to know what type this is.
+    void* GetNativeHandle() const;
+
 private:
     /// Private constructor. Clients use @ref Create instead.
     Window();
