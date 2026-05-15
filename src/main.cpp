@@ -3,6 +3,7 @@
 #include "Window.h"
 
 #include <cstdio>
+#include <memory>
 
 int main() {
     if (!apex::Log::Init()) {
@@ -21,8 +22,8 @@ int main() {
         return 1;
     }
 
-    apex::Window* window = apex::Window::Create("Apex Engine - Alpha", 1280, 720);
-    if (window == nullptr) {
+    std::unique_ptr<apex::Window> window(apex::Window::Create("Apex Engine - Alpha", 1280, 720));
+    if (!window) {
         LOG_FATAL("Engine", "Failed to create window.\n");
         return 1;
     }
@@ -55,7 +56,10 @@ int main() {
         // Eventually: renderer.DrawFrame();
     }
 
-    delete window;
+    // Destroy the window before tearing down Input. The window's destructor
+    // can dispatch a final WM_KILLFOCUS via DestroyWindow, which calls into
+    // Input::Get(); doing this in the wrong order would assert.
+    window.reset();
     apex::Input::Shutdown();
     LOG_INFO("Engine", "Goodbye!");
     apex::Log::Shutdown();
