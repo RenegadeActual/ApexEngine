@@ -341,3 +341,71 @@ HTTPS so the URL is served over TLS.
 Either start the Doxygen comments pass on the public headers, or jump
 to the assertion system. Both depend on the logging system, which is
 done.
+
+## 2026-05-15 — Assertion system
+
+Built an assertion system. The point: dev builds should be very loud
+when an invariant is violated (file + line + reason printed instantly,
+debugger breaks if attached), but the shipped game should pay nothing
+for that verbosity. The standard game-engine answer is "macros that
+strip in release," and that's what this is.
+
+### Design decisions
+
+- **Three macros.** APEX_ASSERT is the workhorse. APEX_VERIFY exists
+  for the side-effect-bearing case — the expression has to actually
+  run in release, just not be checked. APEX_UNREACHABLE marks dead
+  code paths; in release, it lowers to __builtin_unreachable() so the
+  optimizer can eliminate surrounding branches.
+
+- **Independent of the Log system.** Assert.h does not include Log.h.
+  Reason: assertions need to fire even when Log isn't initialized — in
+  fact, especially then. Assert.cpp writes directly to stderr and
+  OutputDebugStringA, then __debugbreak / __builtin_trap / std::abort.
+
+- **std::format-style messages, optional.** Matches the LOG_* macros.
+  APEX_ASSERT(cond), APEX_ASSERT(cond, "msg"), and APEX_ASSERT(cond,
+  "fmt {}", arg) all work via a variadic FormatAssertMessage template
+  plus a zero-arg overload.
+
+- **[[noreturn]] AssertFail with unconditional abort after the
+  debugbreak.** If a debugger continues past the break, std::abort
+  runs anyway. Keeps the function honestly [[noreturn]] without the
+  "what if you continue?" footgun.
+
+- **Stripped via NDEBUG.** CMake's Release config defines it
+  automatically; Debug does not. No engine-specific define needed.
+
+### Wired into
+
+- Input::Get() and Log::Get() — assert s_instance != nullptr. The
+  Input::Get assertion was the deferred TODO from the input system
+  session.
+- Window::PollEvents/ShouldClose/GetWidth/GetHeight — assert m_impl is
+  non-null. Defensive: Create() never returns a Window with a null
+  impl, but the assert documents the invariant.
+- Input::OnKeyDown/Up/OnMouseButtonDown/Up — replaced the existing
+  `if (i < kCount)` guards with bounds asserts. The platform layer
+  always passes valid enum values, so in release we skip the check
+  entirely.
+
+### Decisions deferred
+
+- POSIX debugger detection. IsDebuggerAttached() returns false on
+  non-Windows. When Linux support lands, parse /proc/self/status for
+  TracerPid.
+
+### Files at end of session
+
+- src/Assert.h, src/Assert.cpp — new
+- src/Input.cpp — asserts in Get and event ingestion
+- src/Input.h — Doxygen update for Get's @pre
+- src/Log.cpp — assert in Get
+- src/Window.cpp — asserts in public methods
+- CMakeLists.txt — added Assert.cpp
+
+### Next steps
+
+Vulkan. The pipeline is now in place: window opens, input flows, log
+captures everything, asserts catch invariants. All the scaffolding to
+start building the renderer on top is done.
