@@ -1,5 +1,121 @@
 # Development Journal
 
+## 2026-05-15 (continued) — Vulkan: instance through swapchain
+
+Got everything up through swapchain creation today. No pixels yet — the
+next step is image views, then render pass and pipeline. Today was just
+plumbing.
+
+### What got built
+
+- Renderer subsystem in src/Renderer.h and src/Renderer.cpp. Same
+  Init/Shutdown/Get singleton pattern as Log and Input.
+- VkInstance creation with the standard VkApplicationInfo dance.
+- Validation layers (VK_LAYER_KHRONOS_validation) plus a debug
+  messenger that routes messages through LOG_*. Debug builds only;
+  fully stripped via `if constexpr (kEnableValidation)` in release.
+- Physical device selection. Logs every Vulkan-capable GPU, picks the
+  first discrete one, falls back to anything with graphics support.
+  Also verifies the graphics queue can present to the surface.
+- Logical device plus graphics queue. One queue from one family for
+  now.
+- Win32 surface (VkSurfaceKHR) created from the window's HWND via
+  vkCreateWin32SurfaceKHR. Required exposing the HWND through a new
+  Window::GetNativeHandle() that returns void*. Keeps windows.h out of
+  Window.h's public API.
+- Swapchain. Queries surface capabilities, formats, and present modes.
+  Prefers B8G8R8A8_SRGB with MAILBOX present mode, falls back to FIFO.
+  Uses the window's client extent. 3 images.
+
+### Design decisions
+
+- **One queue family does everything.** The graphics queue also handles
+  presentation. Verified during physical-device selection via
+  vkGetPhysicalDeviceSurfaceSupportKHR. True on every desktop GPU.
+  Separate transfer or compute queues can come later if needed.
+- **Validation stripped in release.** Same pattern as the assertion
+  system. Debug builds loud, release builds zero overhead.
+- **Present mode preference: MAILBOX then FIFO.** MAILBOX is
+  triple-buffered, no tearing, low latency. FIFO is traditional v-sync
+  and the only mode the Vulkan spec guarantees, so it's the safe
+  fallback.
+- **No PIMPL for Renderer yet.** Renderer.h directly includes
+  vulkan/vulkan.h and has Vulkan handle types as members. Only main.cpp
+  pulls Renderer.h in, so the compile-time hit doesn't matter.
+
+### Win32 / clangd / Vulkan-platform-header gotchas
+
+- **clangd couldn't find vulkan.h.** It auto-discovers
+  compile_commands.json only in `./` and `./build/` by default, but
+  mine lives at `./build/windows-debug/compile_commands.json`. Added
+  `CompileFlags.CompilationDatabase: build/windows-debug` to .clangd.
+  Now clangd uses the same flags CMake generates.
+- **windows.h must be included before vulkan/vulkan_win32.h.** The
+  Vulkan-Win32 header references HWND and HINSTANCE in struct
+  definitions, which only exist after windows.h has been parsed.
+- **clang-format reorders includes alphabetically on save.** Saving
+  Renderer.cpp shuffled vulkan_win32.h ahead of windows.h every time.
+  Fix: bracket the order-sensitive block with `// clang-format off`
+  and `// clang-format on`.
+
+**Lesson: any time include order matters, put it inside clang-format
+guards immediately.**
+
+### Bug worth keeping
+
+Typed `appInfo.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;` when it
+should have been `VK_STRUCTURE_TYPE_APPLICATION_INFO`. Validation
+caught it before vkCreateInstance completed, gave me the exact field,
+value, and what was expected. Without validation, the driver would
+have misread the rest of the struct and either crashed or silently
+misbehaved.
+
+**Validation pays for itself on day one.** sType is the easiest field
+to typo and the worst one to get wrong, because the driver uses it to
+figure out how to interpret everything after it.
+
+### Cosmetic noise that isn't a bug
+
+Validation reports several scary-looking errors when the swapchain is
+created — STORAGE_BIT not supported on B8G8R8A8_SRGB,
+max-image-format-properties returning 0. Not from my code. The
+implicit Vulkan layers installed by OBS, Overwolf, XSplit, and
+NVIDIA's overlay tools intercept the swapchain create-info and add
+usage flags so they can capture frames. The format I picked doesn't
+natively support those bits, hence the complaints. The driver creates
+the swapchain anyway.
+
+This is the cost of Vulkan's loader/layer architecture: any software
+the user installs can register an implicit layer that loads into
+every Vulkan app on the machine. OBS, Nsight, RenderDoc all rely on
+it. No clean way to opt out without breaking those tools.
+
+### The rollback chain is getting long
+
+Renderer::Init does six things in sequence — alloc, instance, debug
+messenger, surface, physical device, device, swapchain — and each
+step adds a longer cleanup chain to its failure path. The
+CreateSwapchain block has four Destroy* calls before the delete.
+
+After image views land, move cleanup into the destructor and let Init
+just short-circuit on failure. The current code is overdue.
+
+### Files at end of session
+
+- src/Renderer.h, src/Renderer.cpp — new
+- src/Window.h, src/Window.cpp — added Window::GetNativeHandle()
+- src/main.cpp — wired in Renderer::Init / Renderer::Shutdown
+- CMakeLists.txt — added Renderer.cpp to apex sources
+- .clangd — added CompilationDatabase pointing at build/windows-debug
+
+### Next steps
+
+- Image views — turn each swapchain VkImage into a VkImageView so
+  render passes can attach to them
+- Render pass + framebuffers
+- Graphics pipeline + first shaders
+- First triangle on screen
+
 ## 2026-05-15 (later) — Small cleanups before Vulkan
 
 Knocked out three deferred TODOs that had been sitting in the journal
