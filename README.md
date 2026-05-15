@@ -7,6 +7,12 @@ no console or mobile targets planned.
 This is a solo project in active early development. Don't expect a usable
 engine yet; expect a real-time logbook of what gets built and how.
 
+## Documentation
+
+API reference (Doxygen): https://resume.whatley3.com/ApexEngine/
+
+Docs rebuild automatically on every push to `main` via GitHub Actions.
+
 ## Status
 
 Currently has:
@@ -59,6 +65,7 @@ terminal; logs appear on the console and in a timestamped file under
     CMakeLists.txt        Build configuration
     CMakePresets.json     Build preset definitions
     .clang-format         Code formatting rules
+    Doxyfile              Doxygen configuration (API docs build from this)
 
 The engine will get split into proper subdirectories under `src/`
 (`platform/`, `render/`, `editor/`, etc.) once the structure justifies it.

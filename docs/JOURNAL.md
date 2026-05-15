@@ -270,3 +270,74 @@ which one is the killer.
 - Doxygen setup + documentation pass on public API
 - GitHub Pages hosting
 - Then: Vulkan
+
+## 2026-05-14 — Doxygen on GitHub Pages
+
+Hooked Doxygen up to GitHub Pages so the public API docs are live and
+rebuild themselves on every push to main. Made the repo public at the
+same time — Pages is free on public repos, and the project is finally
+worth showing.
+
+### What got built
+
+- Workflow file at .github/workflows/docs.yml. Two jobs: build (installs
+  doxygen + graphviz on an Ubuntu runner, runs doxygen against the
+  Doxyfile, uploads the HTML as a Pages artifact) and deploy (publishes
+  the artifact to Pages via GitHub's modern OIDC flow — no personal
+  access token needed).
+- Doxyfile committed at the repo root. OUTPUT_DIRECTORY is docs/api,
+  HTML_OUTPUT is html, so the workflow uploads from docs/api/html.
+- .gitignore excludes docs/api/ so the generated HTML never gets
+  committed. The Doxyfile itself is committed — that's the source of
+  truth and you can't reproduce the docs without it.
+
+### Decision: which hosting approach
+
+Three options I considered:
+
+1. Manual gh-pages branch. Generate docs locally, push HTML to gh-pages.
+   Simple mental model but easy to forget — docs drift out of sync with
+   code the first time you ship a refactor and skip the docs step.
+2. Serve from /docs on main. Means committing generated HTML to main,
+   which bloats history and produces hundreds of lines of diff noise
+   every time you tweak a comment.
+3. GitHub Actions workflow. Builds and deploys on every push to main.
+   ~30 lines of YAML. Set-it-and-forget-it.
+
+Went with option 3. The friction of A adds up fast for a solo dev, and
+B is actively bad for git history. C is industry standard for any real
+project.
+
+### One thing that needed fixing
+
+The Doxyfile had USE_MDFILE_AS_MAINPAGE = README.md set, but the README
+wasn't actually rendering as the home page. Cause: the INPUT setting was
+"src docs" — README.md lives at the repo root, so Doxygen never saw it.
+Fixed by changing INPUT to "README.md src docs".
+
+**Lesson: USE_MDFILE_AS_MAINPAGE only works if the file is in INPUT.**
+Doxygen doesn't auto-discover the README. Obvious in retrospect but the
+setting name is misleading.
+
+### Result
+
+First push triggered the workflow. Build took 22 seconds, deploy took
+9 seconds. Site is live at https://resume.whatley3.com/ApexEngine/. The
+custom domain was already wired up for the account; flipped on Enforce
+HTTPS so the URL is served over TLS.
+
+### Followups
+
+- Node 20 deprecation warning from actions/checkout@v4 and
+  actions/upload-artifact@v4. Deprecation isn't until June 2026 so not
+  urgent.
+- The actual Doxygen documentation pass — adding /// comments to the
+  public headers (Common.h, Window.h, Input.h, Log.h). The pipe is
+  hooked up; the headers still need real doc comments so the API
+  reference fills in.
+
+### Next steps
+
+Either start the Doxygen comments pass on the public headers, or jump
+to the assertion system. Both depend on the logging system, which is
+done.
