@@ -1,8 +1,7 @@
 # ApexEngine
 
-A custom 3D engine being built from scratch in C++ for a military-themed
-space combat and economic trade simulation game. Windows and Linux only —
-no console or mobile targets planned.
+A custom 3D engine being built from scratch in C++. Windows only, support for Linux planned for the future.
+No console or mobile targets planned.
 
 This is a solo project in active early development. Don't expect a usable
 engine yet; expect a real-time logbook of what gets built and how.
