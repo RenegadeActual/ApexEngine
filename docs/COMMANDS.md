@@ -1,3 +1,5 @@
+# Useful Commands
+
 ## Reconfigure CMAKE
 
 ```cmake --preset windows-debug```

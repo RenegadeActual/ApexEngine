@@ -40,3 +40,8 @@ desktop.ini
 # Logs
 logs/
 *.log
+
+.claude/
+
+# Generated documentation
+docs/api/

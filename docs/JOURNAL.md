@@ -1,3 +1,4 @@
+# Development Journal
 ## 2026-05-12 — Win32 A/W macro system
 The Win32 API has parallel A (ANSI) and W (wide/UTF-16) variants of every
 function that touches strings. The bare names (e.g. GetMessage) are macros
