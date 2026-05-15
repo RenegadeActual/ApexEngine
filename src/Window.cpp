@@ -8,7 +8,6 @@
 #include <windows.h>
 #include <windowsx.h> // for GET_X_LPARAM and GET_Y_LPARAM macros
 
-#include <cstdio>
 #include <new>
 
 namespace apex {
@@ -28,6 +27,34 @@ struct WindowImpl {
 // ------------------------------------------------------------------------------
 static const wchar_t* kWindowClassName = L"ApexEngineWindowClass";
 static bool g_classRegistered = false;
+
+// ------------------------------------------------------------------------------
+// Convert a UTF-8 string into a UTF-16 wchar_t buffer.
+//
+// Writes up to dstCapacity-1 wide characters and a null terminator. Returns the
+// number of wide characters written (excluding the terminator), or 0 on failure
+// or empty input. Truncates silently if the source would overflow the buffer.
+// ------------------------------------------------------------------------------
+static int Utf8ToUtf16(std::string_view src, wchar_t* dst, int dstCapacity) {
+    if (dst == nullptr || dstCapacity <= 0) {
+        return 0;
+    }
+    dst[0] = L'\0';
+    if (src.empty()) {
+        return 0;
+    }
+    const int written = MultiByteToWideChar(CP_UTF8,
+                                            0,
+                                            src.data(),
+                                            static_cast<int>(src.size()),
+                                            dst,
+                                            dstCapacity - 1);
+    if (written <= 0) {
+        return 0;
+    }
+    dst[written] = L'\0';
+    return written;
+}
 
 // ------------------------------------------------------------------------------
 // Translate Win32 virtual key codes to our platform-independent Key enum.
@@ -374,15 +401,10 @@ Window* Window::Create(std::string_view title, u32 width, u32 height) {
     window->m_impl->width = width;
     window->m_impl->height = height;
 
-    // Step 4: convert the title to wide characters for Win32.
-    // For now we just truncate to ASCII (good enough for our use).
+    // Step 4: convert the title from UTF-8 to UTF-16 for Win32.
     wchar_t titleBuffer[256] = {};
-    {
-        const size_t copyLen = (title.size() < 255) ? title.size() : 255;
-        for (size_t i = 0; i < copyLen; ++i) {
-            titleBuffer[i] = static_cast<wchar_t>(title[i]);
-        }
-        titleBuffer[copyLen] = L'\0';
+    if (Utf8ToUtf16(title, titleBuffer, 256) == 0 && !title.empty()) {
+        LOG_WARN("Window", "Failed to convert window title to UTF-16; using empty title.");
     }
 
     // Step 5: ask Windows to create the actual OS window.

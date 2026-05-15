@@ -31,8 +31,7 @@ public:
 
     /// Create a new window.
     ///
-    /// @param title  Caption shown in the title bar. UTF-8 (currently
-    ///               truncated to ASCII at the Win32 boundary).
+    /// @param title  Caption shown in the title bar. UTF-8.
     /// @param width  Initial client-area width in pixels.
     /// @param height Initial client-area height in pixels.
     /// @return       Owning pointer to the new Window, or nullptr on failure.
