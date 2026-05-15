@@ -23,11 +23,14 @@ Currently has:
   filtering and focus-loss recovery)
 - Logging system with severity levels, per-category thresholds, ANSI-colored
   console output, debugger output, and timestamped log files
+- Assertion macros that strip out in release builds
+- Vulkan renderer setup: instance, validation, physical and logical
+  device, Win32 surface, swapchain
 
 Not yet:
 
 - Linux platform layer
-- Vulkan renderer
+- Actual rendering (image views, render pass, pipeline, draw commands)
 - Anything to do with actual game content
 
 ## Building
@@ -37,8 +40,7 @@ Requires:
 - A C++20 compiler (clang is the primary supported toolchain)
 - CMake 3.25 or newer
 - Ninja
-- The Vulkan SDK (currently unused; will be required once the renderer
-  lands)
+- The Vulkan SDK
 
 On Windows, the Visual Studio Build Tools provide the Windows SDK and
 C++ standard library that clang uses by default.
@@ -59,11 +61,15 @@ terminal; logs appear on the console and in a timestamped file under
         Window.h/cpp      Platform window abstraction (Win32 implementation)
         Input.h/cpp       Keyboard and mouse input system
         Log.h/cpp         Logging system
+        Assert.h/cpp      Debug-only assertion macros
+        Renderer.h/cpp    Vulkan renderer
         main.cpp          Entry point and main loop
-    docs/                 Style guide and design notes
+    docs/                 Style guide, journal, and generated API docs
+    .github/workflows/    CI that builds and deploys Doxygen to GitHub Pages
     CMakeLists.txt        Build configuration
     CMakePresets.json     Build preset definitions
     .clang-format         Code formatting rules
+    .clangd               clangd IDE configuration
     Doxyfile              Doxygen configuration (API docs build from this)
 
 The engine will get split into proper subdirectories under `src/`
@@ -80,11 +86,14 @@ Some non-default decisions worth knowing about:
   the C++ standard library and nothing else. The Vulkan SDK is the only
   exception, and only because the GPU is not addressable from userspace
   any other way.
-- **Singletons for engine-wide subsystems** (Log, Input). Explicit
-  Init/Shutdown lifecycle, not lazy-init.
+- **Singletons for engine-wide subsystems** (Log, Input, Renderer).
+  Explicit Init/Shutdown lifecycle, not lazy-init.
 - **PIMPL for any class whose implementation requires platform headers.**
   This keeps `windows.h` out of every translation unit that uses a
   Window.
+- **Assertions strip out in release builds.** APEX_ASSERT and friends
+  check engine invariants in debug builds and compile away entirely
+  under NDEBUG, so a shipped binary pays no overhead for them.
 
 For more detail, see `docs/STYLE.md`.
 
