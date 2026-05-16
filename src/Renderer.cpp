@@ -1,7 +1,6 @@
 #include "Renderer.h"
 
 #include "Assert.h"
-#include "Common.h"
 #include "Log.h"
 #include "Window.h"
 // clang-format off

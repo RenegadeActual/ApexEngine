@@ -76,22 +76,50 @@ private:
     bool CreateSwapchain();
     void DestroySwapchain();
 
+    // ---- Image Views ----
+    bool CreateImageViews();
+    void DestroyImageViews();
+
     static Renderer* s_instance;
 
-    VkInstance m_instance = VK_NULL_HANDLE;                     ///< Connection to the Vulkan loader.
-    VkDebugUtilsMessengerEXT m_debugMessenger = VK_NULL_HANDLE; ///< Validation-layer callback handle. Debug builds only.
-    VkPhysicalDevice m_physicalDevice = VK_NULL_HANDLE;         ///< Selected GPU.
-    uint32_t m_graphicsQueueFamilyIndex = UINT32_MAX;           ///< Queue-family index used for graphics and presentation.
-    VkDevice m_device = VK_NULL_HANDLE;                         ///< Logical device. Used for nearly all resource creation.
-    VkQueue m_graphicsQueue = VK_NULL_HANDLE;                   ///< Queue for graphics command submission. Also handles presentation.
+    /// Connection to the Vulkan loader.
+    VkInstance m_instance = VK_NULL_HANDLE;
 
-    Window* m_window = nullptr;              ///< Borrowed pointer to the window being presented to.
-    VkSurfaceKHR m_surface = VK_NULL_HANDLE; ///< Vulkan handle to the window's drawable area.
+    /// Validation-layer callback handle. Debug builds only.
+    VkDebugUtilsMessengerEXT m_debugMessenger = VK_NULL_HANDLE;
 
-    VkSwapchainKHR m_swapchain = VK_NULL_HANDLE;           ///< Ring of presentable images.
-    VkFormat m_swapchainImageFormat = VK_FORMAT_UNDEFINED; ///< Pixel format of the swapchain images.
-    VkExtent2D m_swapchainExtent = {0, 0};                 ///< Dimensions of the swapchain images, in pixels.
-    std::vector<VkImage> m_swapchainImages;                ///< Image handles owned by the swapchain. Cleared on DestroySwapchain.
+    /// Selected GPU.
+    VkPhysicalDevice m_physicalDevice = VK_NULL_HANDLE;
+
+    /// Queue-family index used for graphics and presentation.
+    uint32_t m_graphicsQueueFamilyIndex = UINT32_MAX;
+
+    /// Logical device. Used for nearly all resource creation.
+    VkDevice m_device = VK_NULL_HANDLE;
+
+    /// Queue for graphics command submission. Also handles presentation.
+    VkQueue m_graphicsQueue = VK_NULL_HANDLE;
+
+    /// Borrowed pointer to the window being presented to.
+    Window* m_window = nullptr;
+
+    /// Vulkan handle to the window's drawable area.
+    VkSurfaceKHR m_surface = VK_NULL_HANDLE;
+
+    /// Ring of presentable images.
+    VkSwapchainKHR m_swapchain = VK_NULL_HANDLE;
+
+    /// Pixel format of the swapchain images.
+    VkFormat m_swapchainImageFormat = VK_FORMAT_UNDEFINED;
+
+    /// Dimensions of the swapchain images, in pixels.
+    VkExtent2D m_swapchainExtent = {0, 0};
+
+    /// Image handles owned by the swapchain. Cleared on DestroySwapchain.
+    std::vector<VkImage> m_swapchainImages;
+
+    /// One view per swapchain image. Used as render-pass color attachments.
+    std::vector<VkImageView> m_swapchainImageViews;
 };
 
 } // namespace apex
