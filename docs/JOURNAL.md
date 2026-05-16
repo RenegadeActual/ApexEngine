@@ -1,5 +1,125 @@
 # Development Journal
 
+## 2026-05-16 — Pipeline finished, game pivots to sandbox
+
+Two-part day. Wrapped the Vulkan pipeline scaffolding — image views,
+render pass, framebuffers, pipeline layout, graphics pipeline, plus
+the GLSL → SPIR-V build step. Still no triangle on screen because
+command buffers, sync primitives, and a draw loop are next, but
+"all the static state is set up" is a real milestone.
+
+Then took a hard turn on the game design — pivoting to a sandbox-first
+crafting game (less survival, more sandbox), modeled on GregTech /
+SuperSymmetry. Every chemical element on the periodic table will be
+the lowest-level crafting material; compounds and alloys are made via
+real-world (or plausibly futuristic) chemical and physical processes.
+1:1 solar system, start on Earth, work up to space travel before
+mining off-planet.
+
+To support that, and to make modding drag-and-drop friendly from day
+one, started a data-driven material system. Built the foundation today.
+
+### Pipeline scaffolding
+
+- Image views, one per swapchain image. 2D color views, identity
+  swizzle, single mip, single array layer.
+- Render pass with one color attachment (CLEAR/STORE, format matches
+  swapchain) and one subpass. A subpass dependency synchronizes the
+  start of the pass with swapchain image acquisition.
+- Framebuffers, one per image view, sized to the swapchain extent.
+- Triangle shaders (`shaders/triangle.vert` and `shaders/triangle.frag`)
+  with hardcoded positions and colors. CMake compiles them to SPIR-V
+  via `glslc` and drops the `.spv` files into the build output next to
+  the exe.
+- Renderer helpers to read SPIR-V bytes and wrap them in
+  VkShaderModules. The shader modules get destroyed right after
+  pipeline creation — the pipeline keeps its own internal compiled
+  copy.
+- Pipeline layout (empty for now — no uniforms or push constants).
+- The big VkGraphicsPipelineCreateInfo with all 10 sub-structs:
+  shader stages, vertex input (empty), input assembly (triangle list),
+  viewport + scissor, rasterization, multisample, color blend.
+- Init rollback chain collapsed into a single Shutdown() call. Each
+  Destroy* checks VK_NULL_HANDLE so calling Shutdown from a partially-
+  initialized state is safe.
+
+### Material data system
+
+Built `MaterialDatabase`. Loads `data/elements/*.json5` at startup,
+one file per element. Each file has four required typed fields
+(symbol, name, atomic_number, atomic_mass) plus a JSON property bag
+for everything else. Subsystems query whichever bag fields they care
+about.
+
+### Why one-file-per-element
+
+Mod authors drop a single new `.json5` file into
+`mods/<modname>/data/elements/` to add an element, or use the same
+`symbol` as a core file to override it. No merge logic in the
+loader; load order (core first, mods after) handles overrides. The
+118+ files don't matter for perf — all parse in well under 100ms.
+
+### Why hybrid typing (struct + property bag)
+
+The schema will evolve as I research real chemistry. Pure typed
+struct would mean recompiling the engine every time I add a new
+property; pure property bag loses type safety on the handful of
+fields the engine actually needs (symbol for lookup, atomic_number
+for sorting, etc.). The hybrid splits the difference — required
+identity fields are typed, everything else lives in `nlohmann::json`
+and gets queried by gameplay systems on demand.
+
+When the schema stabilizes in a year or two, I'll promote
+frequently-accessed fields from the bag into the struct for speed.
+
+### First third-party library
+
+The engine has been zero-deps so far (Vulkan SDK aside). Hand-rolling
+a JSON parser would've been a few-evenings project full of edge
+cases — Unicode escapes, number precision, comment handling.
+`nlohmann::json` is a single header file dropped into `extern/`,
+MIT-licensed, supports parsing-with-comments via a flag. The
+no-third-party-libs rule was always about the engine itself
+(graphics, OS, threading) where I wanted full control. A single-
+header data parser is closer to "code I copied into my tree" than to
+a dependency I link against.
+
+The library is configured with `allow_exceptions = false` so parse
+failures return a discarded value instead of throwing — necessary
+because the engine builds with `-fno-exceptions`. Field types are
+also validated before calling `.get<T>()` so the type-mismatch path
+never throws either.
+
+### How the data files find their way to the runtime
+
+CMake mirrors `data/` into the build output on each build, same trick
+as the shader pipeline. The loader resolves paths relative to the
+executable directory (via `GetModuleFileNameA` on Windows), so it
+works regardless of the current working directory at launch.
+
+### Files at end of session
+
+- src/MaterialDatabase.h, src/MaterialDatabase.cpp — new
+- src/main.cpp — wired in MaterialDatabase Init/Shutdown plus a
+  sanity log that queries Hydrogen at startup
+- CMakeLists.txt — added MaterialDatabase.cpp source, the data-copy
+  custom target, and the extern/ include path
+- .clangd — added `-Iextern` so editor browsing of nlohmann headers
+  resolves
+- extern/nlohmann/json.hpp — the library
+- data/elements/hydrogen.json5 — first sample element file
+- (also: shader work and pipeline implementation, committed earlier
+  in the day)
+
+### Next steps
+
+- Command buffers, sync primitives, draw loop. That's what gets a
+  triangle on screen.
+- Then: walk per-mod data directories and merge with load-order rules.
+- In parallel during off-hours: research element data and write more
+  `.json5` files. The infrastructure is good now — adding more
+  elements is just data.
+
 ## 2026-05-15 (continued) — Vulkan: instance through swapchain
 
 Got everything up through swapchain creation today. No pixels yet — the
