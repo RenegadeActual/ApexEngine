@@ -162,6 +162,8 @@ namespace apex {
 Renderer* Renderer::s_instance = nullptr;
 
 bool Renderer::Init(Window* window) {
+    APEX_ASSERT(window != nullptr, "Renderer::Init called with null window");
+
     if (s_instance != nullptr) {
         return true; // already initialized
     }
@@ -174,50 +176,39 @@ bool Renderer::Init(Window* window) {
     s_instance->m_window = window;
 
     if (!s_instance->CreateInstance()) {
-        delete s_instance;
-        s_instance = nullptr;
+        Shutdown();
         return false;
     }
-
     if (!s_instance->CreateDebugMessenger()) {
-        s_instance->DestroyInstance();
-        delete s_instance;
-        s_instance = nullptr;
+        Shutdown();
         return false;
     }
-
     if (!s_instance->CreateSurface()) {
-        s_instance->DestroyDebugMessenger();
-        s_instance->DestroyInstance();
-        delete s_instance;
-        s_instance = nullptr;
+        Shutdown();
         return false;
     }
-
     if (!s_instance->PickPhysicalDevice()) {
-        s_instance->DestroySurface();
-        s_instance->DestroyDebugMessenger();
-        s_instance->DestroyInstance();
-        delete s_instance;
-        s_instance = nullptr;
+        Shutdown();
         return false;
     }
-
     if (!s_instance->CreateDevice()) {
-        s_instance->DestroySurface();
-        s_instance->DestroyDebugMessenger();
-        s_instance->DestroyInstance();
-        delete s_instance;
-        s_instance = nullptr;
+        Shutdown();
         return false;
     }
     if (!s_instance->CreateSwapchain()) {
-        s_instance->DestroyDevice();
-        s_instance->DestroySurface();
-        s_instance->DestroyDebugMessenger();
-        s_instance->DestroyInstance();
-        delete s_instance;
-        s_instance = nullptr;
+        Shutdown();
+        return false;
+    }
+    if (!s_instance->CreateImageViews()) {
+        Shutdown();
+        return false;
+    }
+    if (!s_instance->CreateRenderPass()) {
+        Shutdown();
+        return false;
+    }
+    if (!s_instance->CreateFramebuffers()) {
+        Shutdown();
         return false;
     }
 
@@ -228,6 +219,9 @@ void Renderer::Shutdown() {
     if (s_instance == nullptr) {
         return; // not initialized
     }
+    s_instance->DestroyFramebuffers();
+    s_instance->DestroyRenderPass();
+    s_instance->DestroyImageViews();
     s_instance->DestroySwapchain();
     s_instance->DestroyDevice();
     s_instance->DestroySurface();
@@ -580,6 +574,163 @@ void Renderer::DestroySwapchain() {
         m_swapchainImages.clear(); // images are owned by the swapchain
         LOG_INFO("Renderer", "Swapchain destroyed.");
     }
+}
+
+bool Renderer::CreateImageViews() {
+    m_swapchainImageViews.resize(m_swapchainImages.size());
+
+    for (size_t i = 0; i < m_swapchainImages.size(); i++) {
+        VkImageViewCreateInfo createInfo {};
+        createInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+        createInfo.image = m_swapchainImages[i];
+        createInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
+        createInfo.format = m_swapchainImageFormat;
+
+        // Identify component mapping
+        createInfo.components.r = VK_COMPONENT_SWIZZLE_IDENTITY;
+        createInfo.components.g = VK_COMPONENT_SWIZZLE_IDENTITY;
+        createInfo.components.b = VK_COMPONENT_SWIZZLE_IDENTITY;
+        createInfo.components.a = VK_COMPONENT_SWIZZLE_IDENTITY;
+
+        // which subset of image this view covers
+        createInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+        createInfo.subresourceRange.baseMipLevel = 0;
+        createInfo.subresourceRange.levelCount = 1;
+        createInfo.subresourceRange.baseArrayLayer = 0;
+        createInfo.subresourceRange.layerCount = 1;
+
+        const VkResult result =
+            vkCreateImageView(m_device, &createInfo, nullptr, &m_swapchainImageViews[i]);
+        if (result != VK_SUCCESS) {
+            LOG_FATAL("Renderer",
+                      "vkCreateImageView failed for swapchain image {} (VkResult = {})",
+                      i,
+                      static_cast<int>(result));
+            return false;
+        }
+    }
+    LOG_INFO("Renderer", "Created {} image views.", m_swapchainImageViews.size());
+    return true;
+}
+
+void Renderer::DestroyImageViews() {
+    for (VkImageView view : m_swapchainImageViews) {
+        if (view != VK_NULL_HANDLE) {
+            vkDestroyImageView(m_device, view, nullptr);
+        }
+    }
+    m_swapchainImageViews.clear();
+    LOG_INFO("Renderer", "ImageViews destroyed.");
+}
+
+bool Renderer::CreateRenderPass() {
+    // One color attachment matching the swapchain image format.
+    VkAttachmentDescription colorAttachment {};
+    colorAttachment.format = m_swapchainImageFormat;
+    colorAttachment.samples = VK_SAMPLE_COUNT_1_BIT;
+
+    // CLEAR the image at the start of the pass; STORE it at the end so
+    // we can present it.
+    colorAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+    colorAttachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+
+    // No stencil.
+    colorAttachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+    colorAttachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+
+    // Initial layout doesn't matter because we're clearing. Final layout
+    // must be PRESENT_SRC_KHR so the swapchain can present it.
+    colorAttachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+    colorAttachment.finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
+
+    // Reference to the attachment from the subpass.
+    VkAttachmentReference colorAttachmentRef {};
+    colorAttachmentRef.attachment = 0; // index into pAttachments below
+    colorAttachmentRef.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+
+    // One subpass, writes to the color attachment.
+    VkSubpassDescription subpass {};
+    subpass.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
+    subpass.colorAttachmentCount = 1;
+    subpass.pColorAttachments = &colorAttachmentRef;
+
+    // Synchronize image acquisition with the subpass. Without this the
+    // subpass might start writing to the image before the presentation
+    // engine is done reading it from the previous frame.
+    VkSubpassDependency dependency {};
+    dependency.srcSubpass = VK_SUBPASS_EXTERNAL; // work before this pass
+    dependency.dstSubpass = 0;                   // our only subpass
+    dependency.srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+    dependency.srcAccessMask = 0;
+    dependency.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+    dependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+
+    VkRenderPassCreateInfo createInfo {};
+    createInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
+    createInfo.attachmentCount = 1;
+    createInfo.pAttachments = &colorAttachment;
+    createInfo.subpassCount = 1;
+    createInfo.pSubpasses = &subpass;
+    createInfo.dependencyCount = 1;
+    createInfo.pDependencies = &dependency;
+
+    const VkResult result = vkCreateRenderPass(m_device, &createInfo, nullptr, &m_renderPass);
+    if (result != VK_SUCCESS) {
+        LOG_FATAL(
+            "Renderer", "vkCreateRenderPass failed (VkResult = {}).", static_cast<int>(result));
+        return false;
+    }
+
+    LOG_INFO("Renderer", "Render pass created.");
+    return true;
+}
+
+void Renderer::DestroyRenderPass() {
+    if (m_renderPass != VK_NULL_HANDLE) {
+        vkDestroyRenderPass(m_device, m_renderPass, nullptr);
+        m_renderPass = VK_NULL_HANDLE;
+    }
+    LOG_INFO("Renderer", "Destroyed Render Pass.");
+}
+
+bool Renderer::CreateFramebuffers() {
+    m_swapchainFramebuffers.resize(m_swapchainImageViews.size());
+
+    for (size_t i = 0; i < m_swapchainImageViews.size(); ++i) {
+        VkImageView attachments[] = {m_swapchainImageViews[i]};
+
+        VkFramebufferCreateInfo createInfo {};
+        createInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
+        createInfo.renderPass = m_renderPass;
+        createInfo.attachmentCount = 1;
+        createInfo.pAttachments = attachments;
+        createInfo.width = m_swapchainExtent.width;
+        createInfo.height = m_swapchainExtent.height;
+        createInfo.layers = 1;
+
+        const VkResult result =
+            vkCreateFramebuffer(m_device, &createInfo, nullptr, &m_swapchainFramebuffers[i]);
+        if (result != VK_SUCCESS) {
+            LOG_FATAL("Renderer",
+                      "vkCreateFramebuffer failed for image {} (VkResult = {}).",
+                      i,
+                      static_cast<int>(result));
+            return false;
+        }
+    }
+
+    LOG_INFO("Renderer", "Created {} framebuffers.", m_swapchainFramebuffers.size());
+    return true;
+}
+
+void Renderer::DestroyFramebuffers() {
+    for (VkFramebuffer framebuffer : m_swapchainFramebuffers) {
+        if (framebuffer != VK_NULL_HANDLE) {
+            vkDestroyFramebuffer(m_device, framebuffer, nullptr);
+        }
+    }
+    m_swapchainFramebuffers.clear();
+    LOG_INFO("Renderer", "Destroyed framebuffers.");
 }
 
 } // namespace apex

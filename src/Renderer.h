@@ -80,6 +80,14 @@ private:
     bool CreateImageViews();
     void DestroyImageViews();
 
+    // ---- Render Pass ----
+    bool CreateRenderPass();
+    void DestroyRenderPass();
+
+    // ---- Framebuffers ----
+    bool CreateFramebuffers();
+    void DestroyFramebuffers();
+
     static Renderer* s_instance;
 
     /// Connection to the Vulkan loader.
@@ -120,6 +128,12 @@ private:
 
     /// One view per swapchain image. Used as render-pass color attachments.
     std::vector<VkImageView> m_swapchainImageViews;
+
+    /// Render pass that describes how the color attachment is loaded, written, and stored.
+    VkRenderPass m_renderPass = VK_NULL_HANDLE;
+
+    /// One framebuffer per swapchain image view.
+    std::vector<VkFramebuffer> m_swapchainFramebuffers;
 };
 
 } // namespace apex
