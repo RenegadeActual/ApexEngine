@@ -9,6 +9,8 @@
 #include <vulkan/vulkan_win32.h>
 // clang-format on
 #include <cstring>
+#include <filesystem>
+#include <fstream>
 #include <new>
 #include <vector>
 
@@ -115,6 +117,45 @@ const char* PhysicalDeviceTypeString(VkPhysicalDeviceType type) {
     }
 }
 
+// Returns the directory of the running executable. Used so shader paths
+// work no matter what the current working directory is at launch.
+std::filesystem::path GetExecutableDirectory() {
+    char buffer[MAX_PATH];
+    const DWORD len = GetModuleFileNameA(nullptr, buffer, MAX_PATH);
+    if (len == 0 || len >= MAX_PATH) {
+        return {};
+    }
+    return std::filesystem::path(buffer).parent_path();
+}
+
+// Reads a file into a byte buffer. Returns empty on failure.
+std::vector<char> ReadBinaryFile(const std::filesystem::path& path) {
+    std::ifstream file(path, std::ios::ate | std::ios::binary);
+    if (!file.is_open()) {
+        return {};
+    }
+    const size_t fileSize = static_cast<size_t>(file.tellg());
+    std::vector<char> buffer(fileSize);
+    file.seekg(0);
+    file.read(buffer.data(), fileSize);
+    return buffer;
+}
+
+// Wraps SPIR-V bytecode in a VkShaderModule. Returns VK_NULL_HANDLE on
+// failure. The caller owns the returned module and must vkDestroyShaderModule it.
+VkShaderModule CreateShaderModule(VkDevice device, const std::vector<char>& code) {
+    VkShaderModuleCreateInfo createInfo {};
+    createInfo.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
+    createInfo.codeSize = code.size();
+    createInfo.pCode = reinterpret_cast<const uint32_t*>(code.data());
+
+    VkShaderModule module = VK_NULL_HANDLE;
+    if (vkCreateShaderModule(device, &createInfo, nullptr, &module) != VK_SUCCESS) {
+        return VK_NULL_HANDLE;
+    }
+    return module;
+}
+
 VkSurfaceFormatKHR ChooseSwapchainSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& formats) {
     for (const auto& f : formats) {
         if (f.format == VK_FORMAT_B8G8R8A8_SRGB &&
@@ -211,6 +252,14 @@ bool Renderer::Init(Window* window) {
         Shutdown();
         return false;
     }
+    if (!s_instance->CreatePipelineLayout()) {
+        Shutdown();
+        return false;
+    }
+    if (!s_instance->CreateGraphicsPipeline()) {
+        Shutdown();
+        return false;
+    }
 
     return true;
 }
@@ -219,6 +268,8 @@ void Renderer::Shutdown() {
     if (s_instance == nullptr) {
         return; // not initialized
     }
+    s_instance->DestroyGraphicsPipeline();
+    s_instance->DestroyPipelineLayout();
     s_instance->DestroyFramebuffers();
     s_instance->DestroyRenderPass();
     s_instance->DestroyImageViews();
@@ -731,6 +782,177 @@ void Renderer::DestroyFramebuffers() {
     }
     m_swapchainFramebuffers.clear();
     LOG_INFO("Renderer", "Destroyed framebuffers.");
+}
+
+bool Renderer::CreatePipelineLayout() {
+    VkPipelineLayoutCreateInfo createInfo {};
+    createInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
+    createInfo.setLayoutCount = 0; // no descriptor sets yet
+    createInfo.pSetLayouts = nullptr;
+    createInfo.pushConstantRangeCount = 0; // no push constants yet
+    createInfo.pPushConstantRanges = nullptr;
+
+    const VkResult result =
+        vkCreatePipelineLayout(m_device, &createInfo, nullptr, &m_pipelineLayout);
+    if (result != VK_SUCCESS) {
+        LOG_FATAL(
+            "Renderer", "vkCreatePipelineLayout failed (VkResult = {}).", static_cast<int>(result));
+        return false;
+    }
+    LOG_INFO("Renderer", "Pipeline layout created.");
+    return true;
+}
+
+void Renderer::DestroyPipelineLayout() {
+    if (m_pipelineLayout != VK_NULL_HANDLE) {
+        vkDestroyPipelineLayout(m_device, m_pipelineLayout, nullptr);
+        m_pipelineLayout = VK_NULL_HANDLE;
+    }
+    LOG_INFO("Renderer", "Destroyed Pipeline Layout.");
+}
+
+bool Renderer::CreateGraphicsPipeline() {
+    // 1. Load SPIR-V from <exe-dir>/shaders/.
+    const std::filesystem::path shaderDir = GetExecutableDirectory() / "shaders";
+    const std::vector<char> vertCode = ReadBinaryFile(shaderDir / "triangle.vert.spv");
+    const std::vector<char> fragCode = ReadBinaryFile(shaderDir / "triangle.frag.spv");
+    if (vertCode.empty() || fragCode.empty()) {
+        LOG_FATAL("Renderer", "Failed to load shader SPIR-V from {}", shaderDir.string());
+        return false;
+    }
+
+    // 2. Wrap each blob in a VkShaderModule.
+    VkShaderModule vertModule = CreateShaderModule(m_device, vertCode);
+    VkShaderModule fragModule = CreateShaderModule(m_device, fragCode);
+    if (vertModule == VK_NULL_HANDLE || fragModule == VK_NULL_HANDLE) {
+        LOG_FATAL("Renderer", "vkCreateShaderModule failed.");
+        if (vertModule != VK_NULL_HANDLE)
+            vkDestroyShaderModule(m_device, vertModule, nullptr);
+        if (fragModule != VK_NULL_HANDLE)
+            vkDestroyShaderModule(m_device, fragModule, nullptr);
+        return false;
+    }
+
+    // 3. Tell the pipeline which shader to use at each stage.
+    VkPipelineShaderStageCreateInfo vertStage {};
+    vertStage.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+    vertStage.stage = VK_SHADER_STAGE_VERTEX_BIT;
+    vertStage.module = vertModule;
+    vertStage.pName = "main";
+
+    VkPipelineShaderStageCreateInfo fragStage {};
+    fragStage.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+    fragStage.stage = VK_SHADER_STAGE_FRAGMENT_BIT;
+    fragStage.module = fragModule;
+    fragStage.pName = "main";
+
+    const VkPipelineShaderStageCreateInfo shaderStages[] = {vertStage, fragStage};
+
+    // 4. Vertex input: empty. Shader hardcodes positions, no buffers.
+    VkPipelineVertexInputStateCreateInfo vertexInput {};
+    vertexInput.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
+    vertexInput.vertexBindingDescriptionCount = 0;
+    vertexInput.vertexAttributeDescriptionCount = 0;
+
+    // 5. Input assembly: triples of vertices form triangles.
+    VkPipelineInputAssemblyStateCreateInfo inputAssembly {};
+    inputAssembly.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
+    inputAssembly.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
+    inputAssembly.primitiveRestartEnable = VK_FALSE;
+
+    // 6. Viewport + scissor: cover the entire swapchain image.
+    VkViewport viewport {};
+    viewport.x = 0.0f;
+    viewport.y = 0.0f;
+    viewport.width = static_cast<float>(m_swapchainExtent.width);
+    viewport.height = static_cast<float>(m_swapchainExtent.height);
+    viewport.minDepth = 0.0f;
+    viewport.maxDepth = 1.0f;
+
+    VkRect2D scissor {};
+    scissor.offset = {0, 0};
+    scissor.extent = m_swapchainExtent;
+
+    VkPipelineViewportStateCreateInfo viewportState {};
+    viewportState.sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO;
+    viewportState.viewportCount = 1;
+    viewportState.pViewports = &viewport;
+    viewportState.scissorCount = 1;
+    viewportState.pScissors = &scissor;
+
+    // 7. Rasterization: fill triangles, no face culling.
+    VkPipelineRasterizationStateCreateInfo rasterizer {};
+    rasterizer.sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO;
+    rasterizer.depthClampEnable = VK_FALSE;
+    rasterizer.rasterizerDiscardEnable = VK_FALSE;
+    rasterizer.polygonMode = VK_POLYGON_MODE_FILL;
+    rasterizer.lineWidth = 1.0f;
+    rasterizer.cullMode = VK_CULL_MODE_NONE;
+    rasterizer.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;
+    rasterizer.depthBiasEnable = VK_FALSE;
+
+    // 8. Multisample: off.
+    VkPipelineMultisampleStateCreateInfo multisample {};
+    multisample.sType = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO;
+    multisample.sampleShadingEnable = VK_FALSE;
+    multisample.rasterizationSamples = VK_SAMPLE_COUNT_1_BIT;
+
+    // 9. Color blend: no blending, write all channels of the one color attachment.
+    VkPipelineColorBlendAttachmentState colorBlendAttachment {};
+    colorBlendAttachment.colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT |
+                                          VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
+    colorBlendAttachment.blendEnable = VK_FALSE;
+
+    VkPipelineColorBlendStateCreateInfo colorBlend {};
+    colorBlend.sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO;
+    colorBlend.logicOpEnable = VK_FALSE;
+    colorBlend.attachmentCount = 1;
+    colorBlend.pAttachments = &colorBlendAttachment;
+
+    // 10. The big create-info that ties it all together.
+    VkGraphicsPipelineCreateInfo pipelineInfo {};
+    pipelineInfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
+    pipelineInfo.stageCount = 2;
+    pipelineInfo.pStages = shaderStages;
+    pipelineInfo.pVertexInputState = &vertexInput;
+    pipelineInfo.pInputAssemblyState = &inputAssembly;
+    pipelineInfo.pViewportState = &viewportState;
+    pipelineInfo.pRasterizationState = &rasterizer;
+    pipelineInfo.pMultisampleState = &multisample;
+    pipelineInfo.pDepthStencilState = nullptr;
+    pipelineInfo.pColorBlendState = &colorBlend;
+    pipelineInfo.pDynamicState = nullptr;
+    pipelineInfo.layout = m_pipelineLayout;
+    pipelineInfo.renderPass = m_renderPass;
+    pipelineInfo.subpass = 0;
+    pipelineInfo.basePipelineHandle = VK_NULL_HANDLE;
+    pipelineInfo.basePipelineIndex = -1;
+
+    const VkResult result = vkCreateGraphicsPipelines(
+        m_device, VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &m_graphicsPipeline);
+
+    // Shader modules can be destroyed right after pipeline creation; the
+    // pipeline keeps its own internal compiled copy.
+    vkDestroyShaderModule(m_device, vertModule, nullptr);
+    vkDestroyShaderModule(m_device, fragModule, nullptr);
+
+    if (result != VK_SUCCESS) {
+        LOG_FATAL("Renderer",
+                  "vkCreateGraphicsPipelines failed (VkResult = {}).",
+                  static_cast<int>(result));
+        return false;
+    }
+
+    LOG_INFO("Renderer", "Graphics pipeline created.");
+    return true;
+}
+
+void Renderer::DestroyGraphicsPipeline() {
+    if (m_graphicsPipeline != VK_NULL_HANDLE) {
+        vkDestroyPipeline(m_device, m_graphicsPipeline, nullptr);
+        m_graphicsPipeline = VK_NULL_HANDLE;
+    }
+    LOG_INFO("Renderer", "Destroyed Graphics Pipeline.");
 }
 
 } // namespace apex

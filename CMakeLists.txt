@@ -32,6 +32,29 @@ target_link_libraries(apex PRIVATE
     Vulkan::Vulkan
 )
 
+# ---- Shader Compilation ----
+set(APEX_SHADER_SOURCES
+    shaders/triangle.vert
+    shaders/triangle.frag
+)
+
+set(APEX_SHADER_OUTPUTS "")
+foreach(SHADER ${APEX_SHADER_SOURCES})
+    set(SPV_OUTPUT "${CMAKE_BINARY_DIR}/${SHADER}.spv")
+    add_custom_command(
+        OUTPUT ${SPV_OUTPUT}
+        COMMAND ${CMAKE_COMMAND} -E make_directory "${CMAKE_BINARY_DIR}/shaders"
+        COMMAND ${Vulkan_GLSLC_EXECUTABLE} -o ${SPV_OUTPUT} "${CMAKE_SOURCE_DIR}/${SHADER}"
+        DEPENDS ${SHADER}
+        COMMENT "Compiling ${SHADER}"
+        VERBATIM
+    )
+    list(APPEND APEX_SHADER_OUTPUTS ${SPV_OUTPUT})
+endforeach()
+
+add_custom_target(apex_shaders ALL DEPENDS ${APEX_SHADER_OUTPUTS})
+add_dependencies(apex apex_shaders)
+
 if(WIN32)
     target_compile_definitions(apex PRIVATE
         UNICODE

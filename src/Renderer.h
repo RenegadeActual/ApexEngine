@@ -88,6 +88,14 @@ private:
     bool CreateFramebuffers();
     void DestroyFramebuffers();
 
+    // ---- Pipeline Layout
+    bool CreatePipelineLayout();
+    void DestroyPipelineLayout();
+
+    // ---- Graphics Pipeline ----
+    bool CreateGraphicsPipeline();
+    void DestroyGraphicsPipeline();
+
     static Renderer* s_instance;
 
     /// Connection to the Vulkan loader.
@@ -134,6 +142,12 @@ private:
 
     /// One framebuffer per swapchain image view.
     std::vector<VkFramebuffer> m_swapchainFramebuffers;
+
+    /// Pipeline layout. Declares uniforms and push constants for graphics pipelines
+    VkPipelineLayout m_pipelineLayout = VK_NULL_HANDLE;
+
+    /// Graphics Pipeline that draws the triangle
+    VkPipeline m_graphicsPipeline = VK_NULL_HANDLE;
 };
 
 } // namespace apex
