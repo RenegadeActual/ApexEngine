@@ -21,6 +21,7 @@ add_executable(apex
     src/Log.cpp
     src/Assert.cpp
     src/Renderer.cpp
+    src/MaterialDatabase.cpp
 )
 
 target_compile_options(apex PRIVATE
@@ -30,6 +31,10 @@ target_compile_options(apex PRIVATE
 
 target_link_libraries(apex PRIVATE
     Vulkan::Vulkan
+)
+
+target_include_directories(apex PRIVATE
+    extern
 )
 
 # ---- Shader Compilation ----
@@ -51,6 +56,17 @@ foreach(SHADER ${APEX_SHADER_SOURCES})
     )
     list(APPEND APEX_SHADER_OUTPUTS ${SPV_OUTPUT})
 endforeach()
+
+# ---- Data file copying ----
+# Mirror data/ into the build directory so the runtime finds it at
+# <exe_dir>/data/. Same trick as shaders.
+add_custom_target(apex_data ALL
+    COMMAND ${CMAKE_COMMAND} -E copy_directory
+            "${CMAKE_SOURCE_DIR}/data"
+            "${CMAKE_BINARY_DIR}/data"
+    COMMENT "Copying data/ to build output"
+)
+add_dependencies(apex apex_data)
 
 add_custom_target(apex_shaders ALL DEPENDS ${APEX_SHADER_OUTPUTS})
 add_dependencies(apex apex_shaders)

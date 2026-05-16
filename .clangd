@@ -7,3 +7,4 @@ CompileFlags:
     - -DWIN32_LEAN_AND_MEAN
     - -DNOMINMAX
     - -D_WIN32_WINNT=0x0A00
+    - -Iextern

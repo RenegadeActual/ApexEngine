@@ -1,5 +1,6 @@
 #include "Input.h"
 #include "Log.h"
+#include "MaterialDatabase.h"
 #include "Renderer.h"
 #include "Window.h"
 
@@ -16,6 +17,22 @@ int main() {
 
     apex::Log::Get().SetCategoryLevel("Input", apex::LogLevel::Debug);
     apex::Log::Get().SetCategoryLevel("Engine", apex::LogLevel::Debug);
+
+    // initialize material database
+    if (!apex::MaterialDatabase::Init()) {
+        LOG_FATAL("Game", "Failed to initialize material database.");
+        return 1;
+    }
+
+    // sanity check
+    if (const auto* h = apex::MaterialDatabase::Get().GetElement("H")) {
+        LOG_INFO("MaterialDB",
+                 "Loaded {} ({}): Z={}, mass={}",
+                 h->name,
+                 h->symbol,
+                 h->atomicNumber,
+                 h->atomicMass);
+    }
 
     // initialize input system
     if (!apex::Input::Init()) {

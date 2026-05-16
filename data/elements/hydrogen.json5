@@ -1,0 +1,21 @@
+{
+    // ---- Required ----
+    "symbol": "H",
+    "name": "Hydrogen",
+    "atomic_number": 1,
+    "atomic_mass": 1.008,
+
+    // ---- Optional / gameplay ----
+    // Add fields as you research. Engine just stores them; subsystems
+    // query them on demand.
+    "phase_at_stp": "gas",
+    "density": 0.00008988,
+    "melting_point": 14.01,
+    "boiling_point": 20.28,
+    "electronegativity": 2.20,
+    "common_oxidation_states": [-1, 1],
+    "abundance_earth_crust": 0.0014,
+    "common_sources": ["water", "natural_gas", "biomass"],
+    "rarity_tier": 1,
+    "tech_tier_required": 0
+}
