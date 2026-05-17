@@ -1,0 +1,9 @@
+{
+    // ---- Required ----
+    "symbol": "Ag",
+    "name": "Silver",
+    "atomic_number": 47,
+    "atomic_mass": 107.868
+
+    // ---- Optional ----
+}

@@ -1,0 +1,9 @@
+{
+    // ---- Required ----
+    "symbol": "Fm",
+    "name": "Fermium",
+    "atomic_number": 100,
+    "atomic_mass": 257.09511
+
+    // ---- Optional ----
+}

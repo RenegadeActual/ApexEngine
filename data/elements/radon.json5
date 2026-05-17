@@ -1,0 +1,9 @@
+{
+    // ---- Required ----
+    "symbol": "Rn",
+    "name": "Radon",
+    "atomic_number": 86,
+    "atomic_mass": 222.01758
+
+    // ---- Optional ----
+}

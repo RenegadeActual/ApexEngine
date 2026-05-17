@@ -1,0 +1,9 @@
+{
+    // ---- Required ----
+    "symbol": "Pm",
+    "name": "Promethium",
+    "atomic_number": 61,
+    "atomic_mass": 144.91276
+
+    // ---- Optional ----
+}

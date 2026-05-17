@@ -1,0 +1,9 @@
+{
+    // ---- Required ----
+    "symbol": "Pr",
+    "name": "Praseodymium",
+    "atomic_number": 59,
+    "atomic_mass": 140.90766
+
+    // ---- Optional ----
+}

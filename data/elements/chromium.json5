@@ -1,0 +1,9 @@
+{
+    // ---- Required ----
+    "symbol": "Cr",
+    "name": "Cromium",
+    "atomic_number": 24,
+    "atomic_mass": 51.996
+
+    // ---- Optional ----
+}

@@ -1,0 +1,9 @@
+{
+    // ---- Required ----
+    "symbol": "Sm",
+    "name": "Samarium",
+    "atomic_number": 62,
+    "atomic_mass": 150.4
+
+    // ---- Optional ----
+}

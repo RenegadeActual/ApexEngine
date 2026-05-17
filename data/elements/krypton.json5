@@ -1,0 +1,9 @@
+{
+    // ---- Required ----
+    "symbol": "Kr",
+    "name": "Krypton",
+    "atomic_number": 36,
+    "atomic_mass": 83.80
+
+    // ---- Optional ----
+}

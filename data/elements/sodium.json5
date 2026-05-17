@@ -1,0 +1,9 @@
+{
+    // ---- Required ----
+    "symbol": "Na",
+    "name": "Sodium",
+    "atomic_number": 11,
+    "atomic_mass": 22.9897693
+
+    // ---- Optional ----
+}

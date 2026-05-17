@@ -1,0 +1,9 @@
+{
+    // ---- Required ----
+    "symbol": "B",
+    "name": "Boron",
+    "atomic_number": 5,
+    "atomic_mass": 10.81
+
+    // ---- Optional ----
+}

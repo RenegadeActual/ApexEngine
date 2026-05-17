@@ -1,0 +1,9 @@
+{
+    // ---- Required ----
+    "symbol": "La",
+    "name": "Lanthanum",
+    "atomic_number": 57,
+    "atomic_mass": 138.9055
+
+    // ---- Optional ----
+}

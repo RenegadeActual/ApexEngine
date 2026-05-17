@@ -1,0 +1,9 @@
+{
+    // ---- Required ----
+    "symbol": "Nb",
+    "name": "Niobium",
+    "atomic_number": 41,
+    "atomic_mass": 92.90637
+
+    // ---- Optional ----
+}

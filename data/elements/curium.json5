@@ -1,0 +1,9 @@
+{
+    // ---- Required ----
+    "symbol": "Cm",
+    "name": "Curium",
+    "atomic_number": 96,
+    "atomic_mass": 247.07035
+
+    // ---- Optional ----
+}

@@ -1,0 +1,9 @@
+{
+    // ---- Required ----
+    "symbol": "Ni",
+    "name": "Nickel",
+    "atomic_number": 28,
+    "atomic_mass": 58.693
+
+    // ---- Optional ----
+}

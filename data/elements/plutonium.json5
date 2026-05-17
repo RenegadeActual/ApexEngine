@@ -1,0 +1,9 @@
+{
+    // ---- Required ----
+    "symbol": "Pu",
+    "name": "Plutonium",
+    "atomic_number": 94,
+    "atomic_mass": 244.06420
+
+    // ---- Optional ----
+}

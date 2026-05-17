@@ -1,0 +1,9 @@
+{
+    // ---- Required ----
+    "symbol": "In",
+    "name": "Indium",
+    "atomic_number": 49,
+    "atomic_mass": 114.818
+
+    // ---- Optional ----
+}

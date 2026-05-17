@@ -1,0 +1,9 @@
+{
+    // ---- Required ----
+    "symbol": "W",
+    "name": "Tungsten",
+    "atomic_number": 74,
+    "atomic_mass": 183.84
+
+    // ---- Optional ----
+}

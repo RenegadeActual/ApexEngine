@@ -1,0 +1,9 @@
+{
+    // ---- Required ----
+    "symbol": "O",
+    "name": "Oxygen",
+    "atomic_number": 8,
+    "atomic_mass": 15.999
+
+    // ---- Optional ----
+}

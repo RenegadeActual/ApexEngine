@@ -1,0 +1,9 @@
+{
+    // ---- Required ----
+    "symbol": "Lr",
+    "name": "Lawrencium",
+    "atomic_number": 103,
+    "atomic_mass": 266.120
+
+    // ---- Optional ----
+}

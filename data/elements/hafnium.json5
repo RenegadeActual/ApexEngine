@@ -1,0 +1,9 @@
+{
+    // ---- Required ----
+    "symbol": "Hf",
+    "name": "Hafnium",
+    "atomic_number": 72,
+    "atomic_mass": 178.49
+
+    // ---- Optional ----
+}

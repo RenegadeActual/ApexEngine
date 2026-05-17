@@ -1,0 +1,9 @@
+{
+    // ---- Required ----
+    "symbol": "Ir",
+    "name": "Iridum",
+    "atomic_number": 77,
+    "atomic_mass": 192.22
+
+    // ---- Optional ----
+}

@@ -1,0 +1,9 @@
+{
+    // ---- Required ----
+    "symbol": "Lv",
+    "name": "Livermorium",
+    "atomic_number": 116,
+    "atomic_mass": 293.205
+
+    // ---- Optional ----
+}

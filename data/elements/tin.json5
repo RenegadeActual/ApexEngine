@@ -1,0 +1,9 @@
+{
+    // ---- Required ----
+    "symbol": "Sn",
+    "name": "Tin",
+    "atomic_number": 50,
+    "atomic_mass": 118.71
+
+    // ---- Optional ----
+}

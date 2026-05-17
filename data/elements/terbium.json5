@@ -1,0 +1,9 @@
+{
+    // ---- Required ----
+    "symbol": "Tb",
+    "name": "Terbium",
+    "atomic_number": 65,
+    "atomic_mass": 158.92535
+
+    // ---- Optional ----
+}

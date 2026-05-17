@@ -1,0 +1,9 @@
+{
+    // ---- Required ----
+    "symbol": "Nd",
+    "name": "Neodymium",
+    "atomic_number": 60,
+    "atomic_mass": 144.24
+
+    // ---- Optional ----
+}

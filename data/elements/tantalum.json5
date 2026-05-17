@@ -1,0 +1,9 @@
+{
+    // ---- Required ----
+    "symbol": "Ta",
+    "name": "Tantalum",
+    "atomic_number": 73,
+    "atomic_mass": 180.9479
+
+    // ---- Optional ----
+}

@@ -1,0 +1,9 @@
+{
+    // ---- Required ----
+    "symbol": "Ra",
+    "name": "Radium",
+    "atomic_number": 88,
+    "atomic_mass": 226.02541
+
+    // ---- Optional ----
+}

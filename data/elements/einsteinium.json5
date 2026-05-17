@@ -1,0 +1,9 @@
+{
+    // ---- Required ----
+    "symbol": "Es",
+    "name": "Einsteinium",
+    "atomic_number": 99,
+    "atomic_mass": 252.0830
+
+    // ---- Optional ----
+}

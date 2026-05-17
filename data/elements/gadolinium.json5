@@ -1,0 +1,9 @@
+{
+    // ---- Required ----
+    "symbol": "Gd",
+    "name": "Gadolinium",
+    "atomic_number": 63,
+    "atomic_mass": 157.25
+
+    // ---- Optional ----
+}

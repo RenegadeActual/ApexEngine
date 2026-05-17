@@ -1,0 +1,9 @@
+{
+    // ---- Required ----
+    "symbol": "Be",
+    "name": "Beryllium",
+    "atomic_number": 4,
+    "atomic_mass": 9.012183
+
+    // ---- Optional ----
+}

@@ -1,0 +1,9 @@
+{
+    // ---- Required ----
+    "symbol": "At",
+    "name": "Astatine",
+    "atomic_number": 85,
+    "atomic_mass": 209.98715
+
+    // ---- Optional ----
+}

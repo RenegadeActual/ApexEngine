@@ -3,11 +3,9 @@
     "symbol": "H",
     "name": "Hydrogen",
     "atomic_number": 1,
-    "atomic_mass": 1.008,
+    "atomic_mass": 1.0080,
 
-    // ---- Optional / gameplay ----
-    // Add fields as you research. Engine just stores them; subsystems
-    // query them on demand.
+    // ---- Optional ----
     "phase_at_stp": "gas",
     "density": 0.00008988,
     "melting_point": 14.01,

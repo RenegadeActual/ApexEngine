@@ -1,0 +1,9 @@
+{
+    // ---- Required ----
+    "symbol": "Am",
+    "name": "Americium",
+    "atomic_number": 95,
+    "atomic_mass": 243.061380
+
+    // ---- Optional ----
+}

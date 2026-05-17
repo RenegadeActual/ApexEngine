@@ -1,0 +1,9 @@
+{
+    // ---- Required ----
+    "symbol": "Cd",
+    "name": "Cadmium",
+    "atomic_number": 48,
+    "atomic_mass": 112.41
+
+    // ---- Optional ----
+}

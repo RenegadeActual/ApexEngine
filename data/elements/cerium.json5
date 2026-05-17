@@ -1,0 +1,9 @@
+{
+    // ---- Required ----
+    "symbol": "Ce",
+    "name": "Cerium",
+    "atomic_number": 58,
+    "atomic_mass": 140.116
+
+    // ---- Optional ----
+}

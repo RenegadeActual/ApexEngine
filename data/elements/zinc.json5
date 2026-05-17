@@ -1,0 +1,9 @@
+{
+    // ---- Required ----
+    "symbol": "Zn",
+    "name": "Zinc",
+    "atomic_number": 30,
+    "atomic_mass": 65.4
+
+    // ---- Optional ----
+}

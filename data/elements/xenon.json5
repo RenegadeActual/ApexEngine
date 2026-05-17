@@ -1,0 +1,9 @@
+{
+    // ---- Required ----
+    "symbol": "Xe",
+    "name": "Xenon",
+    "atomic_number": 54,
+    "atomic_mass": 131.29
+
+    // ---- Optional ----
+}

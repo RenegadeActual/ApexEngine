@@ -1,0 +1,9 @@
+{
+    // ---- Required ----
+    "symbol": "P",
+    "name": "Phosphorus",
+    "atomic_number": 15,
+    "atomic_mass": 30.97376200
+
+    // ---- Optional ----
+}

@@ -1,0 +1,9 @@
+{
+    // ---- Required ----
+    "symbol": "Th",
+    "name": "Thorium",
+    "atomic_number": 90,
+    "atomic_mass": 232.038
+
+    // ---- Optional ----
+}

@@ -1,0 +1,9 @@
+{
+    // ---- Required ----
+    "symbol": "Pb",
+    "name": "Lead",
+    "atomic_number": 82,
+    "atomic_mass": 207
+
+    // ---- Optional ----
+}

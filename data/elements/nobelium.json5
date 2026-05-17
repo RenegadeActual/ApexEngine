@@ -1,0 +1,9 @@
+{
+    // ---- Required ----
+    "symbol": "No",
+    "name": "Nobelium",
+    "atomic_number": 102,
+    "atomic_mass": 259.10100
+
+    // ---- Optional ----
+}

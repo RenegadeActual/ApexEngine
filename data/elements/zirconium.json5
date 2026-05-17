@@ -1,0 +1,9 @@
+{
+    // ---- Required ----
+    "symbol": "Zr",
+    "name": "Zirconium",
+    "atomic_number": 40,
+    "atomic_mass": 91.22
+
+    // ---- Optional ----
+}

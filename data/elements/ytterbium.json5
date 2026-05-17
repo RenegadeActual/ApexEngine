@@ -1,0 +1,9 @@
+{
+    // ---- Required ----
+    "symbol": "Yb",
+    "name": "Ytterbium",
+    "atomic_number": 70,
+    "atomic_mass": 173.05
+
+    // ---- Optional ----
+}

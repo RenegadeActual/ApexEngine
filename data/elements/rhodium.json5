@@ -1,0 +1,9 @@
+{
+    // ---- Required ----
+    "symbol": "Rh",
+    "name": "Rhodium",
+    "atomic_number": 45,
+    "atomic_mass": 102.9055
+
+    // ---- Optional ----
+}

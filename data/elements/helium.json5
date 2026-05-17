@@ -1,0 +1,9 @@
+{
+    // ---- Required ----
+    "symbol": "He",
+    "name": "Helium",
+    "atomic_number": 2,
+    "atomic_mass": 4.00260
+
+    // ---- Optional ----
+}

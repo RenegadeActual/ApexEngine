@@ -1,0 +1,9 @@
+{
+    // ---- Required ----
+    "symbol": "Sg",
+    "name": "Seaborgium",
+    "atomic_number": 106,
+    "atomic_mass": 269.128
+
+    // ---- Optional ----
+}

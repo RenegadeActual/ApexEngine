@@ -1,0 +1,9 @@
+{
+    // ---- Required ----
+    "symbol": "Au",
+    "name": "Gold",
+    "atomic_number": 79,
+    "atomic_mass": 196.96657
+
+    // ---- Optional ----
+}

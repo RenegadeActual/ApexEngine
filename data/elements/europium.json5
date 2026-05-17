@@ -1,0 +1,9 @@
+{
+    // ---- Required ----
+    "symbol": "Eu",
+    "name": "Europium",
+    "atomic_number": 63,
+    "atomic_mass": 151.964
+
+    // ---- Optional ----
+}

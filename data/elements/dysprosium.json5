@@ -1,0 +1,9 @@
+{
+    // ---- Required ----
+    "symbol": "Dy",
+    "name": "Dysprosium",
+    "atomic_number": 66,
+    "atomic_mass": 162.500
+
+    // ---- Optional ----
+}

@@ -1,0 +1,9 @@
+{
+    // ---- Required ----
+    "symbol": "Md",
+    "name": "Mendelevium",
+    "atomic_number": 101,
+    "atomic_mass": 258.09843
+
+    // ---- Optional ----
+}

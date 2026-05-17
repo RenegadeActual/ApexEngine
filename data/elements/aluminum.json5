@@ -1,0 +1,9 @@
+{
+    // ---- Required ----
+    "symbol": "Al",
+    "name": "Aluminum",
+    "atomic_number": 13,
+    "atomic_mass": 26.981538
+
+    // ---- Optional ----
+}

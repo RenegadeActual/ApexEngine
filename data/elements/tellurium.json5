@@ -1,0 +1,9 @@
+{
+    // ---- Required ----
+    "symbol": "Te",
+    "name": "Telllurium",
+    "atomic_number": 52,
+    "atomic_mass": 127.6
+
+    // ---- Optional ----
+}

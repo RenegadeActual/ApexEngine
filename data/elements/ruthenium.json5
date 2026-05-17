@@ -1,0 +1,9 @@
+{
+    // ---- Required ----
+    "symbol": "Ru",
+    "name": "Ruthenium",
+    "atomic_number": 44,
+    "atomic_mass": 101.1
+
+    // ---- Optional ----
+}

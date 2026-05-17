@@ -1,0 +1,9 @@
+{
+    // ---- Required ----
+    "symbol": "Cf",
+    "name": "Californium",
+    "atomic_number": 98,
+    "atomic_mass": 251.07959
+
+    // ---- Optional ----
+}

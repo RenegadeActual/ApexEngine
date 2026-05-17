@@ -1,0 +1,9 @@
+{
+    // ---- Required ----
+    "symbol": "Si",
+    "name": "Silicon",
+    "atomic_number": 14,
+    "atomic_mass": 28.085
+
+    // ---- Optional ----
+}

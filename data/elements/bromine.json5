@@ -1,0 +1,9 @@
+{
+    // ---- Required ----
+    "symbol": "Br",
+    "name": "Bromine",
+    "atomic_number": 35,
+    "atomic_mass": 79.90
+
+    // ---- Optional ----
+}

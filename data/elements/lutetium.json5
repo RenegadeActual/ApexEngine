@@ -1,0 +1,9 @@
+{
+    // ---- Required ----
+    "symbol": "Lu",
+    "name": "Lutetium",
+    "atomic_number": 71,
+    "atomic_mass": 174.9667
+
+    // ---- Optional ----
+}

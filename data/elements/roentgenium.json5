@@ -1,0 +1,9 @@
+{
+    // ---- Required ----
+    "symbol": "Rg",
+    "name": "Roentgenium",
+    "atomic_number": 111,
+    "atomic_mass": 282.169
+
+    // ---- Optional ----
+}

@@ -1,0 +1,9 @@
+{
+    // ---- Required ----
+    "symbol": "Er",
+    "name": "Erbium",
+    "atomic_number": 68,
+    "atomic_mass": 167.26
+
+    // ---- Optional ----
+}

@@ -1,0 +1,9 @@
+{
+    // ---- Required ----
+    "symbol": "Po",
+    "name": "Polonium",
+    "atomic_number": 84,
+    "atomic_mass": 208.98243
+
+    // ---- Optional ----
+}

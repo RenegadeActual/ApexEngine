@@ -1,0 +1,9 @@
+{
+    // ---- Required ----
+    "symbol": "Fe",
+    "name": "Iron",
+    "atomic_number": 26,
+    "atomic_mass": 55.84
+
+    // ---- Optional ----
+}

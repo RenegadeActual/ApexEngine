@@ -1,0 +1,9 @@
+{
+    // ---- Required ----
+    "symbol": "S",
+    "name": "Sulfur",
+    "atomic_number": 16,
+    "atomic_mass": 32.07
+
+    // ---- Optional ----
+}

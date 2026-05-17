@@ -1,0 +1,9 @@
+{
+    // ---- Required ----
+    "symbol": "Bh",
+    "name": "Bohrium",
+    "atomic_number": 107,
+    "atomic_mass": 270.133
+
+    // ---- Optional ----
+}

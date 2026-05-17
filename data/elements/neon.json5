@@ -1,0 +1,9 @@
+{
+    // ---- Required ----
+    "symbol": "Ne",
+    "name": "Neon",
+    "atomic_number": 10,
+    "atomic_mass": 20.180
+
+    // ---- Optional ----
+}

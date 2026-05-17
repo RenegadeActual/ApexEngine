@@ -1,0 +1,9 @@
+{
+    // ---- Required ----
+    "symbol": "Sb",
+    "name": "Antimony",
+    "atomic_number": 51,
+    "atomic_mass": 121.760
+
+    // ---- Optional ----
+}

@@ -1,0 +1,9 @@
+{
+    // ---- Required ----
+    "symbol": "Fr",
+    "name": "Francium",
+    "atomic_number": 87,
+    "atomic_mass": 223.01973
+
+    // ---- Optional ----
+}

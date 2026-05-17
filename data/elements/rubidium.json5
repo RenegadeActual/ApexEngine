@@ -1,0 +1,9 @@
+{
+    // ---- Required ----
+    "symbol": "Rb",
+    "name": "Rubidium",
+    "atomic_number": 37,
+    "atomic_mass": 85.468
+
+    // ---- Optional ----
+}

@@ -1,0 +1,9 @@
+{
+    // ---- Required ----
+    "symbol": "V",
+    "name": "Vanadium",
+    "atomic_number": 23,
+    "atomic_mass": 50.9415
+
+    // ---- Optional ----
+}

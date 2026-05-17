@@ -1,0 +1,9 @@
+{
+    // ---- Required ----
+    "symbol": "Cn",
+    "name": "Copernicium",
+    "atomic_number": 112,
+    "atomic_mass": 286.179
+
+    // ---- Optional ----
+}

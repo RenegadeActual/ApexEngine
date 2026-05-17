@@ -1,0 +1,9 @@
+{
+    // ---- Required ----
+    "symbol": "Ge",
+    "name": "Germainum",
+    "atomic_number": 32,
+    "atomic_mass": 72.63
+
+    // ---- Optional ----
+}

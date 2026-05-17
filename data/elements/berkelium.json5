@@ -1,0 +1,9 @@
+{
+    // ---- Required ----
+    "symbol": "Bk",
+    "name": "Berkelium",
+    "atomic_number": 97,
+    "atomic_mass": 247.07031
+
+    // ---- Optional ----
+}

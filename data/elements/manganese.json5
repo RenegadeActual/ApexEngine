@@ -1,0 +1,9 @@
+{
+    // ---- Required ----
+    "symbol": "Mn",
+    "name": "Manganese",
+    "atomic_number": 25,
+    "atomic_mass": 54.93804
+
+    // ---- Optional ----
+}

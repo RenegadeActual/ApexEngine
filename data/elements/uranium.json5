@@ -1,0 +1,9 @@
+{
+    // ---- Required ----
+    "symbol": "U",
+    "name": "Uranium",
+    "atomic_number": 92,
+    "atomic_mass": 238.0289
+
+    // ---- Optional ----
+}

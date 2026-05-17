@@ -1,0 +1,9 @@
+{
+    // ---- Required ----
+    "symbol": "Sc",
+    "name": "Scandium",
+    "atomic_number": 21,
+    "atomic_mass": 44.95591
+
+    // ---- Optional ----
+}

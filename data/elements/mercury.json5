@@ -1,0 +1,9 @@
+{
+    // ---- Required ----
+    "symbol": "Hg",
+    "name": "Mercury",
+    "atomic_number": 80,
+    "atomic_mass": 200.59
+
+    // ---- Optional ----
+}

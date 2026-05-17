@@ -1,0 +1,9 @@
+{
+    // ---- Required ----
+    "symbol": "Pt",
+    "name": "Platinum",
+    "atomic_number": 78,
+    "atomic_mass": 195.08
+
+    // ---- Optional ----
+}

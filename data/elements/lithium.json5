@@ -1,0 +1,9 @@
+{
+    // ---- Required ----
+    "symbol": "Li",
+    "name": "Lithium",
+    "atomic_number": 3,
+    "atomic_mass": 7.0
+
+    // ---- Optional ----
+}

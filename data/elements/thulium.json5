@@ -1,0 +1,9 @@
+{
+    // ---- Required ----
+    "symbol": "Tm",
+    "name": "Thulium",
+    "atomic_number": 69,
+    "atomic_mass": 168.93422
+
+    // ---- Optional ----
+}

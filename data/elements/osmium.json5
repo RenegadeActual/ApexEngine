@@ -1,0 +1,9 @@
+{
+    // ---- Required ----
+    "symbol": "Os",
+    "name": "Osmium",
+    "atomic_number": 76,
+    "atomic_mass": 190.2
+
+    // ---- Optional ----
+}

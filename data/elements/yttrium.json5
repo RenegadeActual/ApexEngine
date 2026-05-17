@@ -1,0 +1,9 @@
+{
+    // ---- Required ----
+    "symbol": "Y",
+    "name": "Yttrium",
+    "atomic_number": 39,
+    "atomic_mass": 88.90584
+
+    // ---- Optional ----
+}

@@ -1,0 +1,9 @@
+{
+    // ---- Required ----
+    "symbol": "Ga",
+    "name": "Gallium",
+    "atomic_number": 31,
+    "atomic_mass": 69.723
+
+    // ---- Optional ----
+}

@@ -1,0 +1,9 @@
+{
+    // ---- Required ----
+    "symbol": "Mc",
+    "name": "Moscovium",
+    "atomic_number": 115,
+    "atomic_mass": 290.196
+
+    // ---- Optional ----
+}

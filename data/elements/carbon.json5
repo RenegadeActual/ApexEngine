@@ -1,0 +1,9 @@
+{
+    // ---- Required ----
+    "symbol": "C",
+    "name": "Carbon",
+    "atomic_number": 6,
+    "atomic_mass": 12.011
+
+    // ---- Optional ----
+}

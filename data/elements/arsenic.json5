@@ -1,0 +1,9 @@
+{
+    // ---- Required ----
+    "symbol": "As",
+    "name": "Arsenic",
+    "atomic_number": 33,
+    "atomic_mass": 74.92159
+
+    // ---- Optional ----
+}

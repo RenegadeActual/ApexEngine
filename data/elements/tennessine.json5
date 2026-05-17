@@ -1,0 +1,9 @@
+{
+    // ---- Required ----
+    "symbol": "Ts",
+    "name": "Tennessine",
+    "atomic_number": 117,
+    "atomic_mass": 294.211
+
+    // ---- Optional ----
+}

@@ -1,0 +1,9 @@
+{
+    // ---- Required ----
+    "symbol": "Fl",
+    "name": "Flerovium",
+    "atomic_number": 114,
+    "atomic_mass": 290.192
+
+    // ---- Optional ----
+}

@@ -1,0 +1,9 @@
+{
+    // ---- Required ----
+    "symbol": "Nh",
+    "name": "Nihonium",
+    "atomic_number": 113,
+    "atomic_mass": 286.182
+
+    // ---- Optional ----
+}

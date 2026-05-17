@@ -1,0 +1,9 @@
+{
+    // ---- Required ----
+    "symbol": "Mo",
+    "name": "Molybdenum",
+    "atomic_number": 42,
+    "atomic_mass": 95.95
+
+    // ---- Optional ----
+}

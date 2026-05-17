@@ -1,0 +1,9 @@
+{
+    // ---- Required ----
+    "symbol": "Ar",
+    "name": "Argon",
+    "atomic_number": 18,
+    "atomic_mass": 39.9
+
+    // ---- Optional ----
+}

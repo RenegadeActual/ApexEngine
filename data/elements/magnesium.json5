@@ -1,0 +1,9 @@
+{
+    // ---- Required ----
+    "symbol": "Mg",
+    "name": "Magnesium",
+    "atomic_number": 12,
+    "atomic_mass": 24.305
+
+    // ---- Optional ----
+}

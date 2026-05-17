@@ -1,0 +1,9 @@
+{
+    // ---- Required ----
+    "symbol": "Ba",
+    "name": "Barium",
+    "atomic_number": 56,
+    "atomic_mass": 137.33
+
+    // ---- Optional ----
+}

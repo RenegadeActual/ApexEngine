@@ -1,0 +1,9 @@
+{
+    // ---- Required ----
+    "symbol": "Bi",
+    "name": "Bismuth",
+    "atomic_number": 83,
+    "atomic_mass": 208.98040
+
+    // ---- Optional ----
+}

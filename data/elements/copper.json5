@@ -1,0 +1,9 @@
+{
+    // ---- Required ----
+    "symbol": "Cu",
+    "name": "Copper",
+    "atomic_number": 29,
+    "atomic_mass": 63.55
+
+    // ---- Optional ----
+}

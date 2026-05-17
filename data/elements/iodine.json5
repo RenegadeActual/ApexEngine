@@ -1,0 +1,9 @@
+{
+    // ---- Required ----
+    "symbol": "I",
+    "name": "Iodine",
+    "atomic_number": 52,
+    "atomic_mass": 126.9045
+
+    // ---- Optional ----
+}

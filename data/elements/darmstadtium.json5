@@ -1,0 +1,9 @@
+{
+    // ---- Required ----
+    "symbol": "Ds",
+    "name": "Darmstadtium",
+    "atomic_number": 110,
+    "atomic_mass": 282.166
+
+    // ---- Optional ----
+}

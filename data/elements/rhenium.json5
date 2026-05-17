@@ -1,0 +1,9 @@
+{
+    // ---- Required ----
+    "symbol": "Re",
+    "name": "Rhenium",
+    "atomic_number": 75,
+    "atomic_mass": 186.207
+
+    // ---- Optional ----
+}

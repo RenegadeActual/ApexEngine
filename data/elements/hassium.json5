@@ -1,0 +1,9 @@
+{
+    // ---- Required ----
+    "symbol": "Hs",
+    "name": "Hassium",
+    "atomic_number": 108,
+    "atomic_mass": 269.1336
+
+    // ---- Optional ----
+}

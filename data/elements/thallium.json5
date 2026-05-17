@@ -1,0 +1,9 @@
+{
+    // ---- Required ----
+    "symbol": "Tl",
+    "name": "Thallium",
+    "atomic_number": 81,
+    "atomic_mass": 204.383
+
+    // ---- Optional ----
+}

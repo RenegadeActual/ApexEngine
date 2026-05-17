@@ -1,0 +1,9 @@
+{
+    // ---- Required ----
+    "symbol": "Ac",
+    "name": "Actinium",
+    "atomic_number": 89,
+    "atomic_mass": 227.02775
+
+    // ---- Optional ----
+}

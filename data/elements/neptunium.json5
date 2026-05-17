@@ -1,0 +1,9 @@
+{
+    // ---- Required ----
+    "symbol": "Np",
+    "name": "Neptunium",
+    "atomic_number": 93,
+    "atomic_mass": 237.048172
+
+    // ---- Optional ----
+}

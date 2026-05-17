@@ -1,0 +1,9 @@
+{
+    // ---- Required ----
+    "symbol": "K",
+    "name": "Potassium",
+    "atomic_number": 19,
+    "atomic_mass": 39.0983
+
+    // ---- Optional ----
+}

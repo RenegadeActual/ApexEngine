@@ -1,0 +1,9 @@
+{
+    // ---- Required ----
+    "symbol": "Cs",
+    "name": "Cesium",
+    "atomic_number": 55,
+    "atomic_mass": 132.9054520
+
+    // ---- Optional ----
+}

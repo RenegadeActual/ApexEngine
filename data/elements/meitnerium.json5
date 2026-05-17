@@ -1,0 +1,9 @@
+{
+    // ---- Required ----
+    "symbol": "Mt",
+    "name": "Meitnerium",
+    "atomic_number": 109,
+    "atomic_mass": 277.154
+
+    // ---- Optional ----
+}

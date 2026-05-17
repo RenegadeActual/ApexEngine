@@ -1,0 +1,9 @@
+{
+    // ---- Required ----
+    "symbol": "F",
+    "name": "Flourine",
+    "atomic_number": 9,
+    "atomic_mass": 18.99840316
+
+    // ---- Optional ----
+}

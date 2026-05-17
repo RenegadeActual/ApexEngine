@@ -1,0 +1,9 @@
+{
+    // ---- Required ----
+    "symbol": "Sr",
+    "name": "Strontium",
+    "atomic_number": 38,
+    "atomic_mass": 87.62
+
+    // ---- Optional ----
+}

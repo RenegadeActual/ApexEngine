@@ -1,0 +1,9 @@
+{
+    // ---- Required ----
+    "symbol": "Cl",
+    "name": "Chlorine",
+    "atomic_number": 17,
+    "atomic_mass": 35.45
+
+    // ---- Optional ----
+}
