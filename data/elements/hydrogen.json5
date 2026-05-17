@@ -6,14 +6,17 @@
     "atomic_mass": 1.0080,
 
     // ---- Optional ----
-    "phase_at_stp": "gas",
-    "density": 0.00008988,
-    "melting_point": 14.01,
-    "boiling_point": 20.28,
+    "metal_type": "nonmetal",
+    "standard_state": "gas",
+    "atomic_radius": 120, // pm
+    "density": 0.00008988, // g/cm^3
+    "ionization_energy": 13.598, // eV
+    "electron_affinity": 0.754, // eV
+    "melting_point": 13.81, // K
+    "boiling_point": 20.28, // K
     "electronegativity": 2.20,
     "common_oxidation_states": [-1, 1],
     "abundance_earth_crust": 0.0014,
     "common_sources": ["water", "natural_gas", "biomass"],
-    "rarity_tier": 1,
-    "tech_tier_required": 0
+    "year_discovered": 1766
 }
