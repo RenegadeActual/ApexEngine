@@ -260,6 +260,18 @@ bool Renderer::Init(Window* window) {
         Shutdown();
         return false;
     }
+    if (!s_instance->CreateCommandPool()) {
+        Shutdown();
+        return false;
+    }
+    if (!s_instance->CreateCommandBuffer()) {
+        Shutdown();
+        return false;
+    }
+    if (!s_instance->CreateSyncObjects()) {
+        Shutdown();
+        return false;
+    }
 
     return true;
 }
@@ -268,6 +280,14 @@ void Renderer::Shutdown() {
     if (s_instance == nullptr) {
         return; // not initialized
     }
+
+    // Make sure the GPU is done with everything before tear down.
+    if (s_instance->m_device != VK_NULL_HANDLE) {
+        vkDeviceWaitIdle(s_instance->m_device);
+    }
+
+    s_instance->DestroySyncObjects();
+    s_instance->DestroyCommandPool();
     s_instance->DestroyGraphicsPipeline();
     s_instance->DestroyPipelineLayout();
     s_instance->DestroyFramebuffers();
@@ -953,6 +973,189 @@ void Renderer::DestroyGraphicsPipeline() {
         m_graphicsPipeline = VK_NULL_HANDLE;
     }
     LOG_INFO("Renderer", "Destroyed Graphics Pipeline.");
+}
+
+bool Renderer::CreateCommandPool() {
+    VkCommandPoolCreateInfo createInfo {};
+    createInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
+    // RESET_COMMAND_BUFFER_BIT lets us call vkResetCommandBuffer on
+    // individual buffers from this pool. Without it, the only way to
+    // re-record a buffer is to reset the whole pool.
+    createInfo.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
+    createInfo.queueFamilyIndex = m_graphicsQueueFamilyIndex;
+
+    const VkResult result = vkCreateCommandPool(m_device, &createInfo, nullptr, &m_commandPool);
+    if (result != VK_SUCCESS) {
+        LOG_FATAL(
+            "Renderer", "vkCreateCommandPool failed (VkResult = {}).", static_cast<int>(result));
+        return false;
+    }
+
+    LOG_INFO("Renderer", "Command pool created.");
+    return true;
+}
+
+void Renderer::DestroyCommandPool() {
+    if (m_commandPool != VK_NULL_HANDLE) {
+        // Destroying the pool also frees every command buffer allocated
+        // from it, including m_commandBuffer.
+        vkDestroyCommandPool(m_device, m_commandPool, nullptr);
+        m_commandPool = VK_NULL_HANDLE;
+        m_commandBuffer = VK_NULL_HANDLE; // pool teardown invalidated this
+    }
+}
+
+bool Renderer::CreateCommandBuffer() {
+    VkCommandBufferAllocateInfo allocInfo {};
+    allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+    allocInfo.commandPool = m_commandPool;
+    // PRIMARY = can be submitted directly to a queue. SECONDARY = can only
+    // be called from a primary buffer; useful for reusable sub-sequences.
+    allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+    allocInfo.commandBufferCount = 1;
+
+    const VkResult result = vkAllocateCommandBuffers(m_device, &allocInfo, &m_commandBuffer);
+    if (result != VK_SUCCESS) {
+        LOG_FATAL("Renderer",
+                  "vkAllocateCommandBuffers failed (VkResult = {}).",
+                  static_cast<int>(result));
+        return false;
+    }
+
+    LOG_INFO("Renderer", "Command buffer allocated.");
+    return true;
+}
+
+bool Renderer::CreateSyncObjects() {
+    VkSemaphoreCreateInfo semInfo {};
+    semInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
+
+    VkFenceCreateInfo fenceInfo {};
+    fenceInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
+    // Created in signaled state so the very first frame's wait-for-fence
+    // doesn't deadlock. After the first submit, it follows the normal
+    // signaled-on-completion lifecycle.
+    fenceInfo.flags = VK_FENCE_CREATE_SIGNALED_BIT;
+
+    if (vkCreateSemaphore(m_device, &semInfo, nullptr, &m_imageAvailableSemaphore) != VK_SUCCESS ||
+        vkCreateFence(m_device, &fenceInfo, nullptr, &m_inFlightFence) != VK_SUCCESS) {
+        LOG_FATAL("Renderer", "Failed to create sync objects.");
+        return false;
+    }
+
+    m_renderFinishedSemaphores.resize(m_swapchainImages.size());
+    for (size_t i = 0; i < m_renderFinishedSemaphores.size(); ++i) {
+        if (vkCreateSemaphore(m_device, &semInfo, nullptr, &m_renderFinishedSemaphores[i]) !=
+            VK_SUCCESS) {
+            LOG_FATAL("Renderer", "Failed to create per-image render-finished semaphore.");
+            return false;
+        }
+    }
+
+    LOG_INFO("Renderer", "Sync objects created.");
+    return true;
+}
+
+void Renderer::DestroySyncObjects() {
+    if (m_inFlightFence != VK_NULL_HANDLE) {
+        vkDestroyFence(m_device, m_inFlightFence, nullptr);
+        m_inFlightFence = VK_NULL_HANDLE;
+    }
+    for (VkSemaphore sem : m_renderFinishedSemaphores) {
+        if (sem != VK_NULL_HANDLE) {
+            vkDestroySemaphore(m_device, sem, nullptr);
+        }
+    }
+    m_renderFinishedSemaphores.clear();
+    if (m_imageAvailableSemaphore != VK_NULL_HANDLE) {
+        vkDestroySemaphore(m_device, m_imageAvailableSemaphore, nullptr);
+        m_imageAvailableSemaphore = VK_NULL_HANDLE;
+    }
+}
+
+void Renderer::RecordCommandBuffer(uint32_t imageIndex) {
+    VkCommandBufferBeginInfo beginInfo {};
+    beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+
+    if (vkBeginCommandBuffer(m_commandBuffer, &beginInfo) != VK_SUCCESS) {
+        LOG_ERROR("Renderer", "vkBeginCommandBuffer failed.");
+        return;
+    }
+
+    // Dark blue clear so the rainbow triangle stands out.
+    VkClearValue clearColor {};
+    clearColor.color = {{0.0f, 0.0f, 0.05f, 1.0f}};
+
+    VkRenderPassBeginInfo renderPassInfo {};
+    renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+    renderPassInfo.renderPass = m_renderPass;
+    renderPassInfo.framebuffer = m_swapchainFramebuffers[imageIndex];
+    renderPassInfo.renderArea.offset = {0, 0};
+    renderPassInfo.renderArea.extent = m_swapchainExtent;
+    renderPassInfo.clearValueCount = 1;
+    renderPassInfo.pClearValues = &clearColor;
+
+    vkCmdBeginRenderPass(m_commandBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
+    vkCmdBindPipeline(m_commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_graphicsPipeline);
+    // 3 vertices, 1 instance, first vertex 0, first instance 0.
+    vkCmdDraw(m_commandBuffer, 3, 1, 0, 0);
+    vkCmdEndRenderPass(m_commandBuffer);
+
+    if (vkEndCommandBuffer(m_commandBuffer) != VK_SUCCESS) {
+        LOG_ERROR("Renderer", "vkEndCommandBuffer failed.");
+    }
+}
+
+void Renderer::DrawFrame() {
+    // 1. Wait for the previous frame's GPU work to finish, then reset the fence.
+    vkWaitForFences(m_device, 1, &m_inFlightFence, VK_TRUE, UINT64_MAX);
+    vkResetFences(m_device, 1, &m_inFlightFence);
+
+    // 2. Acquire the next swapchain image. Signals m_imageAvailableSemaphore
+    // when the image is actually ready to render into.
+    uint32_t imageIndex = 0;
+    vkAcquireNextImageKHR(
+        m_device, m_swapchain, UINT64_MAX, m_imageAvailableSemaphore, VK_NULL_HANDLE, &imageIndex);
+
+    // 3. Reset and re-record the command buffer for this frame's image.
+    vkResetCommandBuffer(m_commandBuffer, 0);
+    RecordCommandBuffer(imageIndex);
+
+    // 4. Submit. Wait on image-available before the color-output stage so the
+    // vertex shader can start running before the image is ready. Signal
+    // render-finished + the in-flight fence when the GPU is done.
+    VkSemaphore waitSemaphores[] = {m_imageAvailableSemaphore};
+    VkPipelineStageFlags waitStages[] = {VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT};
+    VkSemaphore signalSemaphores[] = {m_renderFinishedSemaphores[imageIndex]};
+
+    VkSubmitInfo submitInfo {};
+    submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+    submitInfo.waitSemaphoreCount = 1;
+    submitInfo.pWaitSemaphores = waitSemaphores;
+    submitInfo.pWaitDstStageMask = waitStages;
+    submitInfo.commandBufferCount = 1;
+    submitInfo.pCommandBuffers = &m_commandBuffer;
+    submitInfo.signalSemaphoreCount = 1;
+    submitInfo.pSignalSemaphores = signalSemaphores;
+
+    if (vkQueueSubmit(m_graphicsQueue, 1, &submitInfo, m_inFlightFence) != VK_SUCCESS) {
+        LOG_ERROR("Renderer", "vkQueueSubmit failed.");
+        return;
+    }
+
+    // 5. Present. Wait on render-finished so the OS doesn't display a
+    // half-rendered frame.
+    VkSwapchainKHR swapchains[] = {m_swapchain};
+
+    VkPresentInfoKHR presentInfo {};
+    presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
+    presentInfo.waitSemaphoreCount = 1;
+    presentInfo.pWaitSemaphores = signalSemaphores;
+    presentInfo.swapchainCount = 1;
+    presentInfo.pSwapchains = swapchains;
+    presentInfo.pImageIndices = &imageIndex;
+
+    vkQueuePresentKHR(m_graphicsQueue, &presentInfo);
 }
 
 } // namespace apex

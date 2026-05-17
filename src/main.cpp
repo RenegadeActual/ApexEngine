@@ -89,7 +89,7 @@ int main() {
                       input.GetMouseY());
         }
 
-        // Eventually: renderer.DrawFrame();
+        apex::Renderer::Get().DrawFrame();
     }
 
     apex::Renderer::Shutdown();

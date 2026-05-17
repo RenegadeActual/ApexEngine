@@ -51,6 +51,9 @@ public:
     Renderer& operator=(Renderer&&) = delete;
     /// @endcond
 
+    /// Renders a single frame. Call once per frame after Init and before Shutdown.
+    void DrawFrame();
+
 private:
     Renderer() = default;
     ~Renderer() = default;
@@ -95,6 +98,19 @@ private:
     // ---- Graphics Pipeline ----
     bool CreateGraphicsPipeline();
     void DestroyGraphicsPipeline();
+
+    // ---- Command Pool ----
+    bool CreateCommandPool();
+    void DestroyCommandPool();
+
+    // ---- Command Buffer ----
+    bool CreateCommandBuffer();
+
+    // ---- Synchronization Objects ----
+    bool CreateSyncObjects();
+    void DestroySyncObjects();
+
+    void RecordCommandBuffer(uint32_t imageIndex);
 
     static Renderer* s_instance;
 
@@ -148,6 +164,17 @@ private:
 
     /// Graphics Pipeline that draws the triangle
     VkPipeline m_graphicsPipeline = VK_NULL_HANDLE;
+
+    VkCommandPool m_commandPool = VK_NULL_HANDLE;
+    VkCommandBuffer m_commandBuffer = VK_NULL_HANDLE;
+
+    VkSemaphore m_imageAvailableSemaphore = VK_NULL_HANDLE;
+
+    /// Signaled when rendering is complete and the image is ready to present.
+    /// One per swapchain image; indexed by acquired image index.
+    std::vector<VkSemaphore> m_renderFinishedSemaphores;
+
+    VkFence m_inFlightFence = VK_NULL_HANDLE;
 };
 
 } // namespace apex
