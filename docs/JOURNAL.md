@@ -1,5 +1,100 @@
 # Development Journal
 
+## 2026-05-17 — Universal IDs and the first compound
+
+Two things landed today:
+
+1. Switched the engine from chemistry-specific keys (symbol like "H")
+   to universal namespaced IDs (like "base:element.hydrogen") as the
+   primary key for all data entities. Every entity type — element,
+   compound, component, assembly, process — uses the same identifier
+   shape. Recipes will reference any entity uniformly.
+
+2. Added Compound as the second loadable type, with water as the first
+   sample file. The loader mirrors the element pattern: read
+   `data/compounds/*.json5` at startup, validate required fields,
+   store keyed by ID.
+
+Also wrote 117 more element files during off-hours, so the periodic
+table is now fully populated.
+
+### Universal ID format
+
+`<namespace>:<type>.<name>[.<subtype>...]`
+
+Examples:
+- `base:element.hydrogen`
+- `base:compound.water`
+- `base:component.combustion_chamber.small`
+- `base:assembly.small_pressure_fed_engine`
+- `base:process.electrolysis`
+
+`base` is the vanilla namespace; mods use their own. The whole string
+is declared in the file as `"id"`, not derived from path. Moving or
+renaming a file doesn't change its ID — the JSON is the source of
+truth.
+
+### Why this matters
+
+Recipes have to reference whatever they consume and produce. Without
+a uniform identifier shape they'd need type-specific reference
+syntax — strings for elements, paths for compounds, something else
+for components. With one shape, a recipe just lists IDs and the
+engine figures out what they are by namespace-and-type prefix.
+
+### Schema strategy: minimal per type, evolve later
+
+Pure typed structs would mean recompiling every time I add a field.
+Pure property bag loses type safety on the handful of fields the
+engine actually needs. The hybrid pattern (required typed fields +
+JSON property bag for everything else) splits the difference.
+
+For elements: id, symbol, name, atomic_number, atomic_mass are typed.
+Everything else lives in the bag — density, melting point,
+electronegativity, etc.
+
+For compounds: id, name are typed. Formula, composition, properties
+live in the bag.
+
+Each new entity type probably gets only a couple of required typed
+fields — whatever the engine genuinely needs to identify and use the
+entity. Promote bag fields to typed members later once I see which
+ones get queried in hot paths.
+
+### Bug worth keeping
+
+After loading all 118 elements, the sanity-check log for hydrogen
+wasn't firing even though hydrogen was in the database. ID matched,
+file was correct, build dir had the right file, every layer of the
+load path looked right.
+
+Fix: rewrote `if (const auto* h = ...) { ... }` to a plain
+`const auto* h = ...; if (h) { ... }` form. Same logic, same string
+literal. Best guess: there was a typo in the original line I kept
+overlooking, and retyping it forced fresh attention on the string
+literal.
+
+Lesson: when behavior contradicts what the code clearly says, try
+retyping rather than re-reading. Same lesson as the WM_KEYUP bug from
+the input system work — copy-paste asymmetry and visual familiarity
+hide bugs that linear reading skims over.
+
+### Files at end of session
+
+- src/MaterialDatabase.h — added Compound struct, queries, loader declarations
+- src/MaterialDatabase.cpp — Compound loader implementation, Init wires it in
+- src/main.cpp — sanity check + listing loop for compounds
+- data/compounds/water.json5 — first compound file
+- (earlier in the day: all element files filled out, id field added to every element)
+
+### Next steps
+
+- More compound files between sessions
+- Define a minimal Component schema when ready, mirroring the same pattern
+- Eventually: Process and Assembly types
+- Then: recipes, which will be the first real workout for the universal ID system
+- Engine-side: still need command buffers and a draw loop to get a triangle
+
 ## 2026-05-16 — Pipeline finished, game pivots to sandbox
 
 Two-part day. Wrapped the Vulkan pipeline scaffolding — image views,
