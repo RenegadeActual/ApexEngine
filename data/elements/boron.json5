@@ -1,5 +1,6 @@
 {
     // ---- Required ----
+    "id": "base:element.boron",
     "symbol": "B",
     "name": "Boron",
     "atomic_number": 5,

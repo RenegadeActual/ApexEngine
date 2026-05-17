@@ -1,5 +1,6 @@
 {
     // ---- Required ----
+    "id": "base:element.fermium",
     "symbol": "Fm",
     "name": "Fermium",
     "atomic_number": 100,

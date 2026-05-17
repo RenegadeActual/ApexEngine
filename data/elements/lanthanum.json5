@@ -1,5 +1,6 @@
 {
     // ---- Required ----
+    "id": "base:element.lanthanum",
     "symbol": "La",
     "name": "Lanthanum",
     "atomic_number": 57,

@@ -1,5 +1,6 @@
 {
     // ---- Required ----
+    "id": "base:element.xenon",
     "symbol": "Xe",
     "name": "Xenon",
     "atomic_number": 54,

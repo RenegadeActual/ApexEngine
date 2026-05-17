@@ -1,5 +1,6 @@
 {
     // ---- Required ----
+    "id": "base:element.ruthenium",
     "symbol": "Ru",
     "name": "Ruthenium",
     "atomic_number": 44,

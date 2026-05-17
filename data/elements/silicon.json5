@@ -1,5 +1,6 @@
 {
     // ---- Required ----
+    "id": "base:element.silicon",
     "symbol": "Si",
     "name": "Silicon",
     "atomic_number": 14,

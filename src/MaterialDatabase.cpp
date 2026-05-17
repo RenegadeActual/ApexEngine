@@ -66,8 +66,8 @@ MaterialDatabase& MaterialDatabase::Get() {
     return *s_instance;
 }
 
-const Element* MaterialDatabase::GetElement(std::string_view symbol) const {
-    auto it = m_elements.find(std::string(symbol));
+const Element* MaterialDatabase::GetElement(std::string_view id) const {
+    auto it = m_elements.find(std::string(id));
     if (it == m_elements.end()) {
         return nullptr;
     }
@@ -117,15 +117,16 @@ bool MaterialDatabase::LoadElementFile(const std::filesystem::path& path) {
 
     // Required fields — check presence and type before .get<>() to avoid
     // any chance of nlohmann throwing inside a -fno-exceptions binary.
-    if (!doc.contains("symbol") || !doc["symbol"].is_string() || !doc.contains("name") ||
-        !doc["name"].is_string() || !doc.contains("atomic_number") ||
-        !doc["atomic_number"].is_number_integer() || !doc.contains("atomic_mass") ||
-        !doc["atomic_mass"].is_number()) {
+    if (!doc.contains("id") || !doc["id"].is_string() || !doc.contains("symbol") ||
+        !doc["symbol"].is_string() || !doc.contains("name") || !doc["name"].is_string() ||
+        !doc.contains("atomic_number") || !doc["atomic_number"].is_number_integer() ||
+        !doc.contains("atomic_mass") || !doc["atomic_mass"].is_number()) {
         LOG_ERROR("MaterialDB", "{} missing or invalid required field(s).", path.string());
         return false;
     }
 
     Element e;
+    e.id = doc["id"].get<std::string>();
     e.symbol = doc["symbol"].get<std::string>();
     e.name = doc["name"].get<std::string>();
     e.atomicNumber = doc["atomic_number"].get<u32>();
@@ -133,15 +134,16 @@ bool MaterialDatabase::LoadElementFile(const std::filesystem::path& path) {
     e.properties = doc;
     // Strip the typed-out fields from the property bag so subsystems
     // don't accidentally re-query them through the bag.
+    e.properties.erase("id");
     e.properties.erase("symbol");
     e.properties.erase("name");
     e.properties.erase("atomic_number");
     e.properties.erase("atomic_mass");
 
-    if (m_elements.contains(e.symbol)) {
-        LOG_INFO("MaterialDB", "Overriding element {} from {}", e.symbol, path.string());
+    if (m_elements.contains(e.id)) {
+        LOG_INFO("MaterialDB", "Overriding element {} from {}", e.id, path.string());
     }
-    m_elements[e.symbol] = std::move(e);
+    m_elements[e.id] = std::move(e);
     return true;
 }
 

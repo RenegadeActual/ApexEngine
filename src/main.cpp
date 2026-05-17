@@ -25,13 +25,21 @@ int main() {
     }
 
     // sanity check
-    if (const auto* h = apex::MaterialDatabase::Get().GetElement("H")) {
+    const auto* h = apex::MaterialDatabase::Get().GetElement("base:element.hydrogen");
+    if (h) {
         LOG_INFO("MaterialDB",
-                 "Loaded {} ({}): Z={}, mass={}",
+                 "Found hydrogen: {} ({}): Z={}, mass={}",
                  h->name,
-                 h->symbol,
+                 h->id,
                  h->atomicNumber,
                  h->atomicMass);
+    } else {
+        LOG_ERROR("MaterialDB", "GetElement('base:element.hydrogen') returned NULL");
+    }
+
+    LOG_INFO("MaterialDB", "All loaded element ids:");
+    for (const auto& [id, element] : apex::MaterialDatabase::Get().AllElements()) {
+        LOG_INFO("MaterialDB", " {}", id);
     }
 
     // initialize input system

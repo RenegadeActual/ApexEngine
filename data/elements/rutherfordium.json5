@@ -1,5 +1,6 @@
 {
     // ---- Required ----
+    "id": "base:element.rutherfordium",
     "symbol": "Rf",
     "name": "Rutherfordium",
     "atomic_number": 104,

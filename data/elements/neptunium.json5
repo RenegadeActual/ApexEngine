@@ -1,5 +1,6 @@
 {
     // ---- Required ----
+    "id": "base:element.neptunium",
     "symbol": "Np",
     "name": "Neptunium",
     "atomic_number": 93,

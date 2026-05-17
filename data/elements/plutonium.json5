@@ -1,5 +1,6 @@
 {
     // ---- Required ----
+    "id": "base:element.plutonium",
     "symbol": "Pu",
     "name": "Plutonium",
     "atomic_number": 94,

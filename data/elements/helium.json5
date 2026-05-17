@@ -1,5 +1,6 @@
 {
     // ---- Required ----
+    "id": "base:element.helium",
     "symbol": "He",
     "name": "Helium",
     "atomic_number": 2,

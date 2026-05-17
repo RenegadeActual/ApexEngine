@@ -1,5 +1,6 @@
 {
     // ---- Required ----
+    "id": "base:element.tantalum",
     "symbol": "Ta",
     "name": "Tantalum",
     "atomic_number": 73,

@@ -1,5 +1,6 @@
 {
     // ---- Required ----
+    "id": "base:element.gold",
     "symbol": "Au",
     "name": "Gold",
     "atomic_number": 79,

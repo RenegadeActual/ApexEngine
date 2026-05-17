@@ -1,5 +1,6 @@
 {
     // ---- Required ----
+    "id": "base:element.lithium",
     "symbol": "Li",
     "name": "Lithium",
     "atomic_number": 3,

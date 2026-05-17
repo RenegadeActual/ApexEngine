@@ -1,5 +1,6 @@
 {
     // ---- Required ----
+    "id": "base:element.berkelium",
     "symbol": "Bk",
     "name": "Berkelium",
     "atomic_number": 97,

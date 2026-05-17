@@ -1,5 +1,6 @@
 {
     // ---- Required ----
+    "id": "base:element.cerium",
     "symbol": "Ce",
     "name": "Cerium",
     "atomic_number": 58,

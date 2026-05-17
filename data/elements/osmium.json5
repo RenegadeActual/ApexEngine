@@ -1,5 +1,6 @@
 {
     // ---- Required ----
+    "id": "base:element.osmium",
     "symbol": "Os",
     "name": "Osmium",
     "atomic_number": 76,

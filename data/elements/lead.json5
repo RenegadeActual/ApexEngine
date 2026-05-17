@@ -1,5 +1,6 @@
 {
     // ---- Required ----
+    "id": "base:element.lead",
     "symbol": "Pb",
     "name": "Lead",
     "atomic_number": 82,

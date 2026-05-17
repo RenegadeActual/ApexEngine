@@ -1,5 +1,6 @@
 {
     // ---- Required ----
+    "id": "base:element.hydrogen",
     "symbol": "H",
     "name": "Hydrogen",
     "atomic_number": 1,

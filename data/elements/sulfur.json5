@@ -1,5 +1,6 @@
 {
     // ---- Required ----
+    "id": "base:element.sulfur",
     "symbol": "S",
     "name": "Sulfur",
     "atomic_number": 16,

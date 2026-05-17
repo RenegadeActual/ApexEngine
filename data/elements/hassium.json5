@@ -1,5 +1,6 @@
 {
     // ---- Required ----
+    "id": "base:element.hassium",
     "symbol": "Hs",
     "name": "Hassium",
     "atomic_number": 108,

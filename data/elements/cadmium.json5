@@ -1,5 +1,6 @@
 {
     // ---- Required ----
+    "id": "base:element.cadmium",
     "symbol": "Cd",
     "name": "Cadmium",
     "atomic_number": 48,

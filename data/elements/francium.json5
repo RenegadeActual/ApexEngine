@@ -1,5 +1,6 @@
 {
     // ---- Required ----
+    "id": "base:element.francium",
     "symbol": "Fr",
     "name": "Francium",
     "atomic_number": 87,

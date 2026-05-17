@@ -1,5 +1,6 @@
 {
     // ---- Required ----
+    "id": "base:element.molybdenum",
     "symbol": "Mo",
     "name": "Molybdenum",
     "atomic_number": 42,

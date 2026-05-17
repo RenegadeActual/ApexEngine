@@ -1,5 +1,6 @@
 {
     // ---- Required ----
+    "id": "base:element.scandium",
     "symbol": "Sc",
     "name": "Scandium",
     "atomic_number": 21,

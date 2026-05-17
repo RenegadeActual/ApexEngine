@@ -1,5 +1,6 @@
 {
     // ---- Required ----
+    "id": "base:element.oxygen",
     "symbol": "O",
     "name": "Oxygen",
     "atomic_number": 8,

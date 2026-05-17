@@ -1,5 +1,6 @@
 {
     // ---- Required ----
+    "id": "base:element.erbium",
     "symbol": "Er",
     "name": "Erbium",
     "atomic_number": 68,

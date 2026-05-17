@@ -1,5 +1,6 @@
 {
     // ---- Required ----
+    "id": "base:element.potassium",
     "symbol": "K",
     "name": "Potassium",
     "atomic_number": 19,

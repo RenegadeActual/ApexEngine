@@ -1,5 +1,6 @@
 {
     // ---- Required ----
+    "id": "base:element.promethium",
     "symbol": "Pm",
     "name": "Promethium",
     "atomic_number": 61,

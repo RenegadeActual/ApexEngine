@@ -1,7 +1,8 @@
 {
     // ---- Required ----
+    "id": "base:element.palladium",
     "symbol": "Pd",
-    "name": "Palldium",
+    "name": "Palladium",
     "atomic_number": 46,
     "atomic_mass": 106.42
 

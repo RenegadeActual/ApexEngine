@@ -1,5 +1,6 @@
 {
     // ---- Required ----
+    "id": "base:element.rubidium",
     "symbol": "Rb",
     "name": "Rubidium",
     "atomic_number": 37,

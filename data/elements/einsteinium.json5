@@ -1,5 +1,6 @@
 {
     // ---- Required ----
+    "id": "base:element.einsteinium",
     "symbol": "Es",
     "name": "Einsteinium",
     "atomic_number": 99,

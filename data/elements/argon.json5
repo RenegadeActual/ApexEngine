@@ -1,5 +1,6 @@
 {
     // ---- Required ----
+    "id": "base:element.argon",
     "symbol": "Ar",
     "name": "Argon",
     "atomic_number": 18,

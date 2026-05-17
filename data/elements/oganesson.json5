@@ -1,5 +1,6 @@
 {
     // ---- Required ----
+    "id": "base:element.oganesson",
     "symbol": "Og",
     "name": "Oganesson",
     "atomic_number": 118,

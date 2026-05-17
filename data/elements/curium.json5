@@ -1,5 +1,6 @@
 {
     // ---- Required ----
+    "id": "base:element.curium",
     "symbol": "Cm",
     "name": "Curium",
     "atomic_number": 96,

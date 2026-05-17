@@ -1,5 +1,6 @@
 {
     // ---- Required ----
+    "id": "base:element.mendelevium",
     "symbol": "Md",
     "name": "Mendelevium",
     "atomic_number": 101,

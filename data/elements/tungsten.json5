@@ -1,5 +1,6 @@
 {
     // ---- Required ----
+    "id": "base:element.tungsten",
     "symbol": "W",
     "name": "Tungsten",
     "atomic_number": 74,

@@ -1,5 +1,6 @@
 {
     // ---- Required ----
+    "id": "base:element.niobium",
     "symbol": "Nb",
     "name": "Niobium",
     "atomic_number": 41,

@@ -1,5 +1,6 @@
 {
     // ---- Required ----
+    "id": "base:element.zirconium",
     "symbol": "Zr",
     "name": "Zirconium",
     "atomic_number": 40,

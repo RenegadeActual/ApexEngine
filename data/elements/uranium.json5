@@ -1,5 +1,6 @@
 {
     // ---- Required ----
+    "id": "base:element.uranium",
     "symbol": "U",
     "name": "Uranium",
     "atomic_number": 92,

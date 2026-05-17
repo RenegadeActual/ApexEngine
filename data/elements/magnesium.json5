@@ -1,5 +1,6 @@
 {
     // ---- Required ----
+    "id": "base:element.magnesium",
     "symbol": "Mg",
     "name": "Magnesium",
     "atomic_number": 12,

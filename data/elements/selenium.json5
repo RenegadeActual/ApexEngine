@@ -1,5 +1,6 @@
 {
     // ---- Required ----
+    "id": "base:element.selenium",
     "symbol": "Se",
     "name": "Selenium",
     "atomic_number": 34,

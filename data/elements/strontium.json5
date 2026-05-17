@@ -1,5 +1,6 @@
 {
     // ---- Required ----
+    "id": "base:element.strontium",
     "symbol": "Sr",
     "name": "Strontium",
     "atomic_number": 38,

@@ -1,5 +1,6 @@
 {
     // ---- Required ----
+    "id": "base:element.titanium",
     "symbol": "Ti",
     "name": "Titanium",
     "atomic_number": 22,

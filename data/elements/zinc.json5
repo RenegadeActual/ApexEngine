@@ -1,5 +1,6 @@
 {
     // ---- Required ----
+    "id": "base:element.zinc",
     "symbol": "Zn",
     "name": "Zinc",
     "atomic_number": 30,

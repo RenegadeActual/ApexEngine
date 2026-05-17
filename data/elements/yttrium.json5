@@ -1,5 +1,6 @@
 {
     // ---- Required ----
+    "id": "base:element.yttrium",
     "symbol": "Y",
     "name": "Yttrium",
     "atomic_number": 39,

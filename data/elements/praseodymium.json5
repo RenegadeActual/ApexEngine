@@ -1,5 +1,6 @@
 {
     // ---- Required ----
+    "id": "base:element.praseodymium",
     "symbol": "Pr",
     "name": "Praseodymium",
     "atomic_number": 59,

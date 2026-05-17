@@ -1,5 +1,6 @@
 {
     // ---- Required ----
+    "id": "base:element.samarium",
     "symbol": "Sm",
     "name": "Samarium",
     "atomic_number": 62,

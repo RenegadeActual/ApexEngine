@@ -1,5 +1,6 @@
 {
     // ---- Required ----
+    "id": "base:element.hafnium",
     "symbol": "Hf",
     "name": "Hafnium",
     "atomic_number": 72,

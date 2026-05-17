@@ -1,5 +1,6 @@
 {
     // ---- Required ----
+    "id": "base:element.darmstadtium",
     "symbol": "Ds",
     "name": "Darmstadtium",
     "atomic_number": 110,

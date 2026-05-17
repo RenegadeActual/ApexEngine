@@ -1,5 +1,6 @@
 {
     // ---- Required ----
+    "id": "base:element.actinium",
     "symbol": "Ac",
     "name": "Actinium",
     "atomic_number": 89,

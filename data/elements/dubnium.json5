@@ -1,5 +1,6 @@
 {
     // ---- Required ----
+    "id": "base:element.dubnium",
     "symbol": "Db",
     "name": "Dubnium",
     "atomic_number": 105,

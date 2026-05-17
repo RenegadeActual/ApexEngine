@@ -1,5 +1,6 @@
 {
     // ---- Required ----
+    "id": "base:element.silver",
     "symbol": "Ag",
     "name": "Silver",
     "atomic_number": 47,

@@ -1,5 +1,6 @@
 {
     // ---- Required ----
+    "id": "base:element.mercury",
     "symbol": "Hg",
     "name": "Mercury",
     "atomic_number": 80,

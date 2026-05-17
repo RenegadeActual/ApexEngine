@@ -1,7 +1,8 @@
 {
     // ---- Required ----
+    "id": "base:element.germanium",
     "symbol": "Ge",
-    "name": "Germainum",
+    "name": "Germanium",
     "atomic_number": 32,
     "atomic_mass": 72.63
 

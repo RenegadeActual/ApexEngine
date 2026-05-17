@@ -1,5 +1,6 @@
 {
     // ---- Required ----
+    "id": "base:element.gallium",
     "symbol": "Ga",
     "name": "Gallium",
     "atomic_number": 31,

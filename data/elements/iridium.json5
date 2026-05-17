@@ -1,7 +1,8 @@
 {
     // ---- Required ----
+    "id": "base:element.iridium",
     "symbol": "Ir",
-    "name": "Iridum",
+    "name": "Iridium",
     "atomic_number": 77,
     "atomic_mass": 192.22
 

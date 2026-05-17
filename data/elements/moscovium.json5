@@ -1,5 +1,6 @@
 {
     // ---- Required ----
+    "id": "base:element.moscovium",
     "symbol": "Mc",
     "name": "Moscovium",
     "atomic_number": 115,

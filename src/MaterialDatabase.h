@@ -18,7 +18,11 @@ namespace apex {
 /// A single chemical element. Combines required identity fields with a
 /// JSON property bag for everything else.
 struct Element {
-    /// Chemical symbol. Primary key. "H", "Fe", "Au".
+    /// Universal primary key. Format: "<namespace>:<type>.<name>
+    /// Example: "base:element.hydrogen".
+    std::string id;
+
+    /// Chemical symbol. "H", "Fe", "Au".
     std::string symbol;
 
     /// Display name. "Hydrogen", "Iron".
@@ -67,8 +71,8 @@ public:
 
     // ---- Element queries ----
 
-    /// Look up an element by chemical symbol. Returns nullptr if not loaded.
-    const Element* GetElement(std::string_view symbol) const;
+    /// Look up an element by universal id. Returns nullptr if not loaded.
+    const Element* GetElement(std::string_view id) const;
 
     /// Number of elements currently loaded.
     size_t ElementCount() const { return m_elements.size(); }
@@ -85,7 +89,7 @@ private:
 
     static MaterialDatabase* s_instance;
 
-    /// Loaded elements, keyed by chemical symbol.
+    /// Loaded elements, keyed by universal id.
     std::unordered_map<std::string, Element> m_elements;
 };
 

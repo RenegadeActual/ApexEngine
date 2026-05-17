@@ -1,5 +1,6 @@
 {
     // ---- Required ----
+    "id": "base:element.nitrogen",
     "symbol": "N",
     "name": "Nitrogen",
     "atomic_number": 7,

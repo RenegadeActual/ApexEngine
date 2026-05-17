@@ -1,5 +1,6 @@
 {
     // ---- Required ----
+    "id": "base:element.sodium",
     "symbol": "Na",
     "name": "Sodium",
     "atomic_number": 11,

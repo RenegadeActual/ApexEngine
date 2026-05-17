@@ -1,7 +1,8 @@
 {
     // ---- Required ----
+    "id": "base:element.chromium",
     "symbol": "Cr",
-    "name": "Cromium",
+    "name": "Chromium",
     "atomic_number": 24,
     "atomic_mass": 51.996
 

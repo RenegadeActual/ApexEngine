@@ -1,5 +1,6 @@
 {
     // ---- Required ----
+    "id": "base:element.antimony",
     "symbol": "Sb",
     "name": "Antimony",
     "atomic_number": 51,

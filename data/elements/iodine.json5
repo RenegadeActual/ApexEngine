@@ -1,5 +1,6 @@
 {
     // ---- Required ----
+    "id": "base:element.iodine",
     "symbol": "I",
     "name": "Iodine",
     "atomic_number": 52,

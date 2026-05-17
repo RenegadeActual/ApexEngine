@@ -1,5 +1,6 @@
 {
     // ---- Required ----
+    "id": "base:element.calcium",
     "symbol": "Ca",
     "name": "Calcium",
     "atomic_number": 20,

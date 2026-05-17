@@ -1,5 +1,6 @@
 {
     // ---- Required ----
+    "id": "base:element.livermorium",
     "symbol": "Lv",
     "name": "Livermorium",
     "atomic_number": 116,

@@ -1,5 +1,6 @@
 {
     // ---- Required ----
+    "id": "base:element.tennessine",
     "symbol": "Ts",
     "name": "Tennessine",
     "atomic_number": 117,

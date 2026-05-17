@@ -1,5 +1,6 @@
 {
     // ---- Required ----
+    "id": "base:element.tellurium",
     "symbol": "Te",
     "name": "Telllurium",
     "atomic_number": 52,

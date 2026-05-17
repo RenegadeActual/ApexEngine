@@ -1,5 +1,6 @@
 {
     // ---- Required ----
+    "id": "base:element.gadolinium",
     "symbol": "Gd",
     "name": "Gadolinium",
     "atomic_number": 63,

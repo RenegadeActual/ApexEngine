@@ -1,5 +1,6 @@
 {
     // ---- Required ----
+    "id": "base:element.holmium",
     "symbol": "Ho",
     "name": "Holmium",
     "atomic_number": 67,

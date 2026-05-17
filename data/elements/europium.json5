@@ -1,5 +1,6 @@
 {
     // ---- Required ----
+    "id": "base:element.europium",
     "symbol": "Eu",
     "name": "Europium",
     "atomic_number": 63,

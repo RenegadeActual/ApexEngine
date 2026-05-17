@@ -1,5 +1,6 @@
 {
     // ---- Required ----
+    "id": "base:element.flerovium",
     "symbol": "Fl",
     "name": "Flerovium",
     "atomic_number": 114,

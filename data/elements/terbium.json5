@@ -1,5 +1,6 @@
 {
     // ---- Required ----
+    "id": "base:element.terbium",
     "symbol": "Tb",
     "name": "Terbium",
     "atomic_number": 65,

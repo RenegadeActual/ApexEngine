@@ -1,5 +1,6 @@
 {
     // ---- Required ----
+    "id": "base:element.protactinium",
     "symbol": "Pa",
     "name": "Protactinium",
     "atomic_number": 91,

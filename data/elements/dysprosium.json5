@@ -1,5 +1,6 @@
 {
     // ---- Required ----
+    "id": "base:element.dysprosium",
     "symbol": "Dy",
     "name": "Dysprosium",
     "atomic_number": 66,

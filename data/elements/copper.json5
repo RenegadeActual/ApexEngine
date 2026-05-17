@@ -1,5 +1,6 @@
 {
     // ---- Required ----
+    "id": "base:element.copper",
     "symbol": "Cu",
     "name": "Copper",
     "atomic_number": 29,

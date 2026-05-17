@@ -1,5 +1,6 @@
 {
     // ---- Required ----
+    "id": "base:element.copernicium",
     "symbol": "Cn",
     "name": "Copernicium",
     "atomic_number": 112,

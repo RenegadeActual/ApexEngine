@@ -1,5 +1,6 @@
 {
     // ---- Required ----
+    "id": "base:element.barium",
     "symbol": "Ba",
     "name": "Barium",
     "atomic_number": 56,

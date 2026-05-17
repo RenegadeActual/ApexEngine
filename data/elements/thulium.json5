@@ -1,5 +1,6 @@
 {
     // ---- Required ----
+    "id": "base:element.thulium",
     "symbol": "Tm",
     "name": "Thulium",
     "atomic_number": 69,

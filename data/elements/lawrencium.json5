@@ -1,5 +1,6 @@
 {
     // ---- Required ----
+    "id": "base:element.lawrencium",
     "symbol": "Lr",
     "name": "Lawrencium",
     "atomic_number": 103,

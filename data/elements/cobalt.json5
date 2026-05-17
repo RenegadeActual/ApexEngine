@@ -1,5 +1,6 @@
 {
     // ---- Required ----
+    "id": "base:element.cobalt",
     "symbol": "Co",
     "name": "Cobalt",
     "atomic_number": 27,

@@ -1,5 +1,6 @@
 {
     // ---- Required ----
+    "id": "base:element.indium",
     "symbol": "In",
     "name": "Indium",
     "atomic_number": 49,

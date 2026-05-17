@@ -1,5 +1,6 @@
 {
     // ---- Required ----
+    "id": "base:element.lutetium",
     "symbol": "Lu",
     "name": "Lutetium",
     "atomic_number": 71,

@@ -1,5 +1,6 @@
 {
     // ---- Required ----
+    "id": "base:element.ytterbium",
     "symbol": "Yb",
     "name": "Ytterbium",
     "atomic_number": 70,

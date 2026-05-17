@@ -1,5 +1,6 @@
 {
     // ---- Required ----
+    "id": "base:element.neon",
     "symbol": "Ne",
     "name": "Neon",
     "atomic_number": 10,

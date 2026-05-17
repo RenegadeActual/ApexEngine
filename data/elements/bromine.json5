@@ -1,5 +1,6 @@
 {
     // ---- Required ----
+    "id": "base:element.bromine",
     "symbol": "Br",
     "name": "Bromine",
     "atomic_number": 35,

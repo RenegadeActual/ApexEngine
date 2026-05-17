@@ -1,5 +1,6 @@
 {
     // ---- Required ----
+    "id": "base:element.platinum",
     "symbol": "Pt",
     "name": "Platinum",
     "atomic_number": 78,

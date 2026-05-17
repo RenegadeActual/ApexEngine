@@ -1,5 +1,6 @@
 {
     // ---- Required ----
+    "id": "base:element.beryllium",
     "symbol": "Be",
     "name": "Beryllium",
     "atomic_number": 4,

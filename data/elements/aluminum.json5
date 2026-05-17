@@ -1,5 +1,6 @@
 {
     // ---- Required ----
+    "id": "base:element.aluminum",
     "symbol": "Al",
     "name": "Aluminum",
     "atomic_number": 13,

@@ -1,5 +1,6 @@
 {
     // ---- Required ----
+    "id": "base:element.astatine",
     "symbol": "At",
     "name": "Astatine",
     "atomic_number": 85,

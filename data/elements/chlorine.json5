@@ -1,5 +1,6 @@
 {
     // ---- Required ----
+    "id": "base:element.chlorine",
     "symbol": "Cl",
     "name": "Chlorine",
     "atomic_number": 17,

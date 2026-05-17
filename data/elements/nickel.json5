@@ -1,5 +1,6 @@
 {
     // ---- Required ----
+    "id": "base:element.nickel",
     "symbol": "Ni",
     "name": "Nickel",
     "atomic_number": 28,

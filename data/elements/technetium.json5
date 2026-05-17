@@ -1,5 +1,6 @@
 {
     // ---- Required ----
+    "id": "base:element.technetium",
     "symbol": "Tc",
     "name": "Technetium",
     "atomic_number": 43,

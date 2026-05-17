@@ -1,5 +1,6 @@
 {
     // ---- Required ----
+    "id": "base:element.manganese",
     "symbol": "Mn",
     "name": "Manganese",
     "atomic_number": 25,

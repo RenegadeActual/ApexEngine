@@ -1,5 +1,6 @@
 {
     // ---- Required ----
+    "id": "base:element.rhodium",
     "symbol": "Rh",
     "name": "Rhodium",
     "atomic_number": 45,

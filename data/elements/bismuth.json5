@@ -1,5 +1,6 @@
 {
     // ---- Required ----
+    "id": "base:element.bismuth",
     "symbol": "Bi",
     "name": "Bismuth",
     "atomic_number": 83,

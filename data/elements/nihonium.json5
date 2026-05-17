@@ -1,5 +1,6 @@
 {
     // ---- Required ----
+    "id": "base:element.nihonium",
     "symbol": "Nh",
     "name": "Nihonium",
     "atomic_number": 113,

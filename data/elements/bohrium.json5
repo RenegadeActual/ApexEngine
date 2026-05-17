@@ -1,5 +1,6 @@
 {
     // ---- Required ----
+    "id": "base:element.bohrium",
     "symbol": "Bh",
     "name": "Bohrium",
     "atomic_number": 107,

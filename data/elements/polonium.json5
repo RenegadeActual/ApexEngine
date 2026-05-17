@@ -1,5 +1,6 @@
 {
     // ---- Required ----
+    "id": "base:element.polonium",
     "symbol": "Po",
     "name": "Polonium",
     "atomic_number": 84,

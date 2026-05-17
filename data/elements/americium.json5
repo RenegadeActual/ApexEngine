@@ -1,5 +1,6 @@
 {
     // ---- Required ----
+    "id": "base:element.americium",
     "symbol": "Am",
     "name": "Americium",
     "atomic_number": 95,

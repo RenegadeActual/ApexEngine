@@ -1,5 +1,6 @@
 {
     // ---- Required ----
+    "id": "base:element.rhenium",
     "symbol": "Re",
     "name": "Rhenium",
     "atomic_number": 75,

@@ -1,7 +1,8 @@
 {
     // ---- Required ----
+    "id": "base:element.fluorine",
     "symbol": "F",
-    "name": "Flourine",
+    "name": "Fluorine",
     "atomic_number": 9,
     "atomic_mass": 18.99840316
 
