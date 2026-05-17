@@ -39,6 +39,25 @@ struct Element {
     nlohmann::json properties;
 };
 
+/// A chemical compound. Combinations of elements.
+struct Compound {
+    /// Universal primary key. Format: "<namespace>:<type>.<name>
+    /// Example: "base:compound.water".
+    std::string id;
+
+    /// Display name. "Water".
+    std::string name;
+
+    /// Component elements and their proportions by mass. For water, this
+    /// would be {{"base:element.hydrogen", 0.1119}, {"base:element.oxygen",
+    /// 0.8881}}.
+    std::unordered_map<std::string, f32> composition;
+
+    /// All other properties from the data file. Subsystems query specific
+    /// keys on demand. The engine itself does not interpret these.
+    nlohmann::json properties;
+};
+
 /// Singleton database of materials loaded from data files at startup.
 ///
 /// Lifecycle:
@@ -80,6 +99,9 @@ public:
     /// All loaded elements, keyed by symbol. For iteration.
     const std::unordered_map<std::string, Element>& AllElements() const { return m_elements; }
 
+    /// All loaded compounds, keyed by symbol. For iteration.
+    const std::unordered_map<std::string, Compound>& AllCompounds() const { return m_compounds; }
+
 private:
     MaterialDatabase() = default;
     ~MaterialDatabase() = default;
@@ -87,10 +109,16 @@ private:
     bool LoadElementDirectory(const std::filesystem::path& directory);
     bool LoadElementFile(const std::filesystem::path& path);
 
+    bool LoadCompoundDirectory(const std::filesystem::path& directory);
+    bool LoadCompoundFile(const std::filesystem::path& path);
+
     static MaterialDatabase* s_instance;
 
     /// Loaded elements, keyed by universal id.
     std::unordered_map<std::string, Element> m_elements;
+
+    /// Loaded compounds, keyed by universal id.
+    std::unordered_map<std::string, Compound> m_compounds;
 };
 
 } // namespace apex

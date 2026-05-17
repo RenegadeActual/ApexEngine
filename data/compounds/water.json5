@@ -1,0 +1,17 @@
+{
+    // ---- Required ----
+    "id": "base:compound.water",
+    "name": "Water",
+
+    "formula": "H2O",
+    "composition": [
+        { "element": "base:element.hydrogen", "count": 2 },
+        { "element": "base:element.oxygen", "count": 1 }
+    ],
+
+    // ---- Optional ----
+    "phase_at_room_temp": "liquid",
+    "density": 1.0, // g/cm^3
+    "melting_point": 273.15, // K
+    "boiling_point": 373.15 // K
+}

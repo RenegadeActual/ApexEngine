@@ -42,6 +42,11 @@ int main() {
         LOG_INFO("MaterialDB", " {}", id);
     }
 
+    LOG_INFO("MaterialDB", "All loaded compound IDs:");
+    for (const auto& [id, c] : apex::MaterialDatabase::Get().AllCompounds()) {
+        LOG_INFO("MaterialDB", " {}", id);
+    }
+
     // initialize input system
     if (!apex::Input::Init()) {
         LOG_FATAL("Engine", "Failed to initialize input system.\n");

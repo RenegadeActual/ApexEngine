@@ -51,8 +51,10 @@ bool MaterialDatabase::Init() {
 
     const std::filesystem::path elementsDir = GetExecutableDirectory() / "data" / "elements";
     s_instance->LoadElementDirectory(elementsDir);
-
+    const std::filesystem::path compoundsDir = GetExecutableDirectory() / "data" / "compounds";
+    s_instance->LoadCompoundDirectory(compoundsDir);
     LOG_INFO("MaterialDB", "Loaded {} element(s).", s_instance->m_elements.size());
+    LOG_INFO("MaterialDB", "Loaded {} compound(s).", s_instance->m_compounds.size());
     return true;
 }
 
@@ -144,6 +146,67 @@ bool MaterialDatabase::LoadElementFile(const std::filesystem::path& path) {
         LOG_INFO("MaterialDB", "Overriding element {} from {}", e.id, path.string());
     }
     m_elements[e.id] = std::move(e);
+    return true;
+}
+
+bool MaterialDatabase::LoadCompoundDirectory(const std::filesystem::path& directory) {
+    std::error_code ec;
+    if (!std::filesystem::is_directory(directory, ec)) {
+        LOG_WARN("MaterialDB", "Compound directory not found: {}", directory.string());
+        return false;
+    }
+
+    for (const auto& entry : std::filesystem::directory_iterator(directory, ec)) {
+        if (!entry.is_regular_file()) {
+            continue;
+        }
+        const std::string ext = entry.path().extension().string();
+        if (ext != ".json" && ext != ".json5") {
+            continue;
+        }
+        LoadCompoundFile(entry.path());
+    }
+    return true;
+}
+
+bool MaterialDatabase::LoadCompoundFile(const std::filesystem::path& path) {
+    const std::string content = ReadTextFile(path);
+    if (content.empty()) {
+        LOG_ERROR("MaterialDB", "Failed to read compound file: {}", path.string());
+        return false;
+    }
+
+    nlohmann::json doc = nlohmann::json::parse(content,
+                                               /*cb*/ nullptr,
+                                               /*allow_exceptions*/ false,
+                                               /*ignore_comments*/ true);
+    if (doc.is_discarded()) {
+        LOG_ERROR("MaterialDB", "Parse error in {}.", path.string());
+        return false;
+    }
+
+    if (!doc.is_object()) {
+        LOG_ERROR("MaterialDB", "{} top-level must be an object.", path.string());
+        return false;
+    }
+
+    if (!doc.contains("id") || !doc["id"].is_string() || !doc.contains("name") ||
+        !doc["name"].is_string()) {
+        LOG_ERROR("MaterialDB", "{} missing or invalid required field(s).", path.string());
+        return false;
+    }
+
+    Compound c;
+    c.id = doc["id"].get<std::string>();
+    c.name = doc["name"].get<std::string>();
+    c.properties = doc;
+    c.properties.erase("id");
+    c.properties.erase("name");
+
+    if (m_compounds.contains(c.id)) {
+        LOG_INFO("MaterialDB", "Overriding compound {} from {}", c.id, path.string());
+    }
+    m_compounds[c.id] = std::move(c);
     return true;
 }
 
