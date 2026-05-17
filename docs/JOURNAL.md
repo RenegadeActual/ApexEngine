@@ -1,5 +1,80 @@
 # Development Journal
 
+## 2026-05-17 (later) — First triangle on screen
+
+Got a rainbow triangle drawing in the window. The final stretch — command
+pool, command buffer, sync primitives, draw loop — landed on top of all
+the pipeline plumbing from earlier in the day.
+
+### What got built
+
+- Command pool, tied to the graphics queue family. `RESET_COMMAND_BUFFER_BIT`
+  set so the draw loop can reset and re-record the same buffer every frame.
+- One primary command buffer allocated from the pool. Freed automatically
+  when the pool is destroyed.
+- Sync primitives: `image_available` semaphore (GPU acquired the swapchain
+  image), `render_finished` semaphores per swapchain image (GPU done drawing,
+  OK to present), and `in_flight` fence (CPU/GPU bridge for "previous frame
+  is done"). Fence starts in signaled state so the first frame's wait doesn't
+  deadlock.
+- `RecordCommandBuffer` helper: begin command buffer, begin render pass with
+  a dark blue clear, bind the graphics pipeline, `vkCmdDraw(3, 1, 0, 0)`,
+  end render pass, end command buffer.
+- `DrawFrame`: wait fence, reset fence, acquire image, reset + re-record
+  buffer, submit with the right semaphore waits/signals, present.
+- `vkDeviceWaitIdle` in `Shutdown` so the GPU isn't still using resources
+  when the engine tears them down.
+
+### Validation caught a real bug
+
+After the triangle appeared, validation complained about `render_finished`
+semaphore reuse. Single semaphore, multiple presents in flight. The CPU
+fence made me think the semaphore was safe because the CPU never queued
+more than one frame's GPU work — but `vkQueuePresentKHR` queues an async
+present operation that waits on the semaphore later. Two presents pending
+against one binary semaphore = spec violation.
+
+Fix: one `render_finished` semaphore per swapchain image, indexed by the
+acquired image index. By the time an image rotates back through the
+swapchain, its previous present has consumed its semaphore signal.
+`image_available` stays singular because the CPU fence really does
+serialize acquires.
+
+The triangle rendered correctly despite the bug because the NVIDIA driver
+tolerated it. Validation surfaced the underlying spec violation.
+
+### Known issues to bite off next
+
+- **Window resizing breaks the program.** `vkAcquireNextImageKHR` and
+  `vkQueuePresentKHR` can return `VK_ERROR_OUT_OF_DATE_KHR` or
+  `VK_SUBOPTIMAL_KHR` when the surface dimensions change. The right
+  response is to recreate the swapchain along with the things downstream
+  of it — image views and framebuffers. Right now those error codes are
+  ignored. The renderer carries on with stale resources and validation
+  errors pile up. Resize handling is the next obvious cleanup.
+
+### Files at end of session
+
+- src/Renderer.h — new members for command pool, command buffer,
+  image_available semaphore, render_finished semaphores (vector), and
+  the in_flight fence. Plus the Create/Destroy declarations and
+  `DrawFrame` / `RecordCommandBuffer`.
+- src/Renderer.cpp — implementations for all of the above, plus
+  `vkDeviceWaitIdle` at the top of `Shutdown`.
+- src/main.cpp — replaced the placeholder `// Eventually: renderer.DrawFrame();`
+  with the actual call.
+
+### Next steps
+
+- Resize handling (recreate swapchain on OUT_OF_DATE / SUBOPTIMAL).
+- Frames in flight > 1 — per-frame command buffers, fences, semaphores
+  so the CPU can prepare frame N+1 while the GPU works on N.
+- Vertex buffers to get geometry out of the shader and into a real
+  `VkBuffer`.
+- Then: depth buffer + camera matrices for actual 3D.
+- In parallel during off-hours: more data files, component schema,
+  eventually recipes.
+
 ## 2026-05-17 — Universal IDs and the first compound
 
 Two things landed today:
