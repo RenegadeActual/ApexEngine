@@ -14,7 +14,7 @@
     "electron_affinity": 0.754, // eV
     "melting_point": 13.81, // K
     "boiling_point": 20.28, // K
-    "electronegativity": 2.20,
+    "electronegativity": 2.20, // pauling scale
     "common_oxidation_states": [-1, 1],
     "abundance_earth_crust": 0.0014,
     "common_sources": ["water", "natural_gas", "biomass"],
