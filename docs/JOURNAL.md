@@ -1,5 +1,78 @@
 # Development Journal
 
+## 2026-05-17 (resize) — Live window resize
+
+Got window resizing to work without the white flash that was happening
+on every drag.
+
+### What was actually happening
+
+Windows' resize is a modal message loop. The user clicks-and-holds the
+border, and DefWindowProc enters a nested loop inside DispatchMessage
+that doesn't return until the user releases. My main thread is trapped
+there for the entire drag. PollEvents doesn't return, DrawFrame doesn't
+get called, no rendering happens during the drag at all — the "white
+flash" was just hbrBackground being painted by the OS with nothing
+overwriting it.
+
+### The fix
+
+A redraw callback registered with the window, called from inside
+WndProc on WM_SIZE. Because WM_SIZE is sent synchronously by the modal
+loop, this gives the renderer immediate notice of each size change
+even while the main thread is blocked. The renderer's existing
+RecreateSwapchain logic then runs per WM_SIZE.
+
+Architecture:
+- Window owns a `RedrawCallback` function pointer registered by the
+  renderer at startup.
+- WM_SIZE updates stored dimensions and invokes the callback.
+- WM_ENTERSIZEMOVE / WM_EXITSIZEMOVE flip a `resizing` flag plus
+  start and stop a backup timer in case WM_SIZE doesn't fire during
+  some drag patterns.
+- Renderer has no Win32 dependency. Window has no Vulkan dependency.
+  They talk through the function pointer.
+
+This keeps the Window/Renderer separation clean — Window is still
+pure platform-layer code, Renderer is still pure Vulkan code, the
+only bridge is one captureless lambda registered in main.
+
+Pipeline also moved viewport and scissor from baked-in static state
+to dynamic state set per frame in RecordCommandBuffer. Without that
+the pipeline would need recreation on every size change, which is
+expensive and unnecessary.
+
+### Known limitation
+
+A small visible black sliver shows on the leading edge of the window
+during very fast drags — the gap between Windows exposing the new
+pixel area and the next swapchain present landing. Eliminating it
+means bypassing the standard Vulkan WSI present path entirely
+(WS_EX_NOREDIRECTIONBITMAP + DirectComposition or custom DXGI
+integration). Documented as a TODO above RecreateSwapchain in
+Renderer.cpp for when that refactor's time comes.
+
+### Files at end of session
+
+- src/Window.h — RedrawCallback type, SetRedrawCallback, IsResizing
+- src/Window.cpp — WM_SIZE / WM_ENTERSIZEMOVE / WM_EXITSIZEMOVE /
+  WM_TIMER handlers, new fields on WindowImpl
+- src/Renderer.h — RecreateSwapchain declaration
+- src/Renderer.cpp — viewport/scissor dynamic state, RecreateSwapchain
+  implementation, OUT_OF_DATE/SUBOPTIMAL handling in DrawFrame, TODO
+  about future presentation refactor
+- src/main.cpp — registers the redraw callback after Renderer::Init
+
+### Next steps
+
+- Vertex buffers — move triangle geometry out of the shader into a
+  real VkBuffer. First step toward arbitrary geometry.
+- Then: depth buffer, camera matrices, push constants for a model
+  transform.
+- After that: a cube, then real meshes.
+- The presentation refactor sits in the TODO list for whenever
+  pixel-perfect resize matters more than other features.
+
 ## 2026-05-17 (later) — First triangle on screen
 
 Got a rainbow triangle drawing in the window. The final stretch — command
