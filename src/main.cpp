@@ -64,6 +64,10 @@ int main() {
         return 1;
     }
 
+    // Drive a render from inside Windows' modal drag-resize loop so the
+    // window doesn't go blank while the user is dragging the edges.
+    window->SetRedrawCallback([]() { apex::Renderer::Get().DrawFrame(); });
+
     LOG_INFO("Engine", "Initialization complete. Entering main loop.");
 
     while (!window->ShouldClose()) {

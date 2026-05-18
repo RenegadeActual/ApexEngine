@@ -1,5 +1,7 @@
 #pragma once
 
+#include "Common.h"
+
 #include <vector>
 #include <vulkan/vulkan.h>
 
@@ -78,6 +80,7 @@ private:
     // ---- Swapchain ----
     bool CreateSwapchain();
     void DestroySwapchain();
+    bool RecreateSwapchain();
 
     // ---- Image Views ----
     bool CreateImageViews();
@@ -110,7 +113,7 @@ private:
     bool CreateSyncObjects();
     void DestroySyncObjects();
 
-    void RecordCommandBuffer(uint32_t imageIndex);
+    void RecordCommandBuffer(u32 imageIndex);
 
     static Renderer* s_instance;
 

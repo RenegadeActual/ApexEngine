@@ -20,7 +20,11 @@ struct WindowImpl {
     u32 width = 0;
     u32 height = 0;
     bool shouldClose = false;
+    bool resizing = false;
+    Window::RedrawCallback onRedraw = nullptr;
 };
+
+static constexpr UINT_PTR kResizeTimerId = 1;
 
 // ------------------------------------------------------------------------------
 // File-local state
@@ -435,6 +439,12 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPara
     case WM_SIZE:
         impl->width = LOWORD(lParam);
         impl->height = HIWORD(lParam);
+        // Drive a redraw from inside the modal loop. WM_SIZE is sent
+        // synchronously and immediately, so this is much more responsive
+        // than waiting for the timer.
+        if (impl->onRedraw != nullptr) {
+            impl->onRedraw();
+        }
         return 0;
     case WM_DESTROY:
         return 0;
@@ -509,6 +519,24 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPara
         return 0;
     }
 
+    // ----- Resizing -----
+    case WM_ENTERSIZEMOVE:
+        impl->resizing = true;
+        // ~16ms ≈ 60Hz redraw during the drag. The modal message loop
+        // delivers WM_TIMER messages even while our main thread is
+        // blocked inside DispatchMessage.
+        SetTimer(hwnd, kResizeTimerId, 16, nullptr);
+        return 0;
+    case WM_EXITSIZEMOVE:
+        KillTimer(hwnd, kResizeTimerId);
+        impl->resizing = false;
+        return 0;
+    case WM_TIMER:
+        if (wParam == kResizeTimerId && impl->onRedraw != nullptr) {
+            impl->onRedraw();
+        }
+        return 0;
+
     // ----- Focus -----
     case WM_SETFOCUS:
         // Window regained focus. Re-sync input state from the OS so that
@@ -542,10 +570,8 @@ static bool RegisterWindowClass() {
     wc.lpfnWndProc = WndProc;                     // Set the window procedure function
     wc.hInstance = hInstance;                     // Set the instance handle
     wc.hCursor = LoadCursorW(nullptr, IDC_ARROW); // Use the default arrow cursor
-    wc.hbrBackground = reinterpret_cast<HBRUSH>(
-        COLOR_WINDOW + 1); // Set the background color to the default window color (required but
-                           // useless since Vulkan will render over it)
-    wc.lpszClassName = kWindowClassName; // Set the window class name
+    wc.hbrBackground = nullptr;                   // No background brush (we'll handle painting)
+    wc.lpszClassName = kWindowClassName;          // Set the window class name
 
     if (RegisterClassExW(&wc) == 0) {
         LOG_ERROR("Window", "RegisterClassExW failed. Error code: %lu\n", GetLastError());
@@ -662,6 +688,16 @@ u32 Window::GetHeight() const {
 void* Window::GetNativeHandle() const {
     APEX_ASSERT(m_impl != nullptr, "Window has no platform impl");
     return m_impl->hwnd;
+}
+
+void Window::SetRedrawCallback(RedrawCallback callback) {
+    APEX_ASSERT(m_impl != nullptr, "Window has no platform impl");
+    m_impl->onRedraw = callback;
+}
+
+bool Window::IsResizing() const {
+    APEX_ASSERT(m_impl != nullptr, "Window has no platform impl");
+    return m_impl->resizing;
 }
 
 } // namespace apex

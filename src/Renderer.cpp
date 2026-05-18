@@ -647,6 +647,49 @@ void Renderer::DestroySwapchain() {
     }
 }
 
+bool Renderer::RecreateSwapchain() {
+    // TODO: per-WM_SIZE recreation leaves a small black sliver on the leading
+    // edge during fast drags — the gap between Windows exposing the new area
+    // and the next swapchain present landing. Eliminating it cleanly requires
+    // bypassing standard Vulkan WSI presentation (window created with
+    // WS_EX_NOREDIRECTIONBITMAP, presenting through DirectComposition or
+    // custom DXGI integration). Deferred as a future engine upgrade.
+
+    // If the window is minimized, the surface dimensions are 0x0 and we
+    // can't create a swapchain. Skip and try again next frame.
+    if (m_window->GetWidth() == 0 || m_window->GetHeight() == 0) {
+        return false;
+    }
+
+    // Wait for the GPU to finish before destroying anything it might
+    // still be reading from.
+    vkDeviceWaitIdle(m_device);
+
+    // Tear down the resources that depend on the swapchain's dimensions
+    // and format, in reverse order of creation.
+    DestroyFramebuffers();
+    DestroyImageViews();
+    DestroySwapchain();
+
+    // Build them back up. CreateSwapchain re-queries the surface
+    // capabilities, so it picks up the new size automatically.
+    if (!CreateSwapchain()) {
+        return false;
+    }
+    if (!CreateImageViews()) {
+        return false;
+    }
+    if (!CreateFramebuffers()) {
+        return false;
+    }
+
+    LOG_INFO("Renderer",
+             "Swapchain recreated: {}x{}",
+             m_swapchainExtent.width,
+             m_swapchainExtent.height);
+    return true;
+}
+
 bool Renderer::CreateImageViews() {
     m_swapchainImageViews.resize(m_swapchainImages.size());
 
@@ -880,25 +923,25 @@ bool Renderer::CreateGraphicsPipeline() {
     inputAssembly.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
     inputAssembly.primitiveRestartEnable = VK_FALSE;
 
-    // 6. Viewport + scissor: cover the entire swapchain image.
-    VkViewport viewport {};
-    viewport.x = 0.0f;
-    viewport.y = 0.0f;
-    viewport.width = static_cast<float>(m_swapchainExtent.width);
-    viewport.height = static_cast<float>(m_swapchainExtent.height);
-    viewport.minDepth = 0.0f;
-    viewport.maxDepth = 1.0f;
-
-    VkRect2D scissor {};
-    scissor.offset = {0, 0};
-    scissor.extent = m_swapchainExtent;
-
+    // 6. Viewport + scissor are declared as dynamic state (set each
+    // frame in RecordCommandBuffer) so the pipeline doesn't bake in
+    // a fixed size. Required for resize handling.
     VkPipelineViewportStateCreateInfo viewportState {};
     viewportState.sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO;
     viewportState.viewportCount = 1;
-    viewportState.pViewports = &viewport;
     viewportState.scissorCount = 1;
-    viewportState.pScissors = &scissor;
+
+    // Dynamic state — values set at command-buffer record time instead
+    // of baked into the pipeline.
+    const VkDynamicState dynamicStates[] = {
+        VK_DYNAMIC_STATE_VIEWPORT,
+        VK_DYNAMIC_STATE_SCISSOR,
+    };
+
+    VkPipelineDynamicStateCreateInfo dynamicState {};
+    dynamicState.sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO;
+    dynamicState.dynamicStateCount = sizeof(dynamicStates) / sizeof(dynamicStates[0]);
+    dynamicState.pDynamicStates = dynamicStates;
 
     // 7. Rasterization: fill triangles, no face culling.
     VkPipelineRasterizationStateCreateInfo rasterizer {};
@@ -941,7 +984,7 @@ bool Renderer::CreateGraphicsPipeline() {
     pipelineInfo.pMultisampleState = &multisample;
     pipelineInfo.pDepthStencilState = nullptr;
     pipelineInfo.pColorBlendState = &colorBlend;
-    pipelineInfo.pDynamicState = nullptr;
+    pipelineInfo.pDynamicState = &dynamicState;
     pipelineInfo.layout = m_pipelineLayout;
     pipelineInfo.renderPass = m_renderPass;
     pipelineInfo.subpass = 0;
@@ -1097,7 +1140,21 @@ void Renderer::RecordCommandBuffer(uint32_t imageIndex) {
 
     vkCmdBeginRenderPass(m_commandBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
     vkCmdBindPipeline(m_commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_graphicsPipeline);
-    // 3 vertices, 1 instance, first vertex 0, first instance 0.
+
+    VkViewport viewport {};
+    viewport.x = 0.0f;
+    viewport.y = 0.0f;
+    viewport.width = static_cast<float>(m_swapchainExtent.width);
+    viewport.height = static_cast<float>(m_swapchainExtent.height);
+    viewport.minDepth = 0.0f;
+    viewport.maxDepth = 1.0f;
+    vkCmdSetViewport(m_commandBuffer, 0, 1, &viewport);
+
+    VkRect2D scissor {};
+    scissor.offset = {0, 0};
+    scissor.extent = m_swapchainExtent;
+    vkCmdSetScissor(m_commandBuffer, 0, 1, &scissor);
+
     vkCmdDraw(m_commandBuffer, 3, 1, 0, 0);
     vkCmdEndRenderPass(m_commandBuffer);
 
@@ -1107,15 +1164,29 @@ void Renderer::RecordCommandBuffer(uint32_t imageIndex) {
 }
 
 void Renderer::DrawFrame() {
-    // 1. Wait for the previous frame's GPU work to finish, then reset the fence.
+    // 1. Wait for the previous frame's GPU work to finish.
     vkWaitForFences(m_device, 1, &m_inFlightFence, VK_TRUE, UINT64_MAX);
-    vkResetFences(m_device, 1, &m_inFlightFence);
 
-    // 2. Acquire the next swapchain image. Signals m_imageAvailableSemaphore
-    // when the image is actually ready to render into.
+    // 2. Acquire the next swapchain image. If the surface is out of date
+    // (typically a window resize), recreate the swapchain and skip this
+    // frame. SUBOPTIMAL_KHR means the swapchain still works but isn't
+    // ideal — we render this frame anyway and recreate after present.
     uint32_t imageIndex = 0;
-    vkAcquireNextImageKHR(
+    const VkResult acquireResult = vkAcquireNextImageKHR(
         m_device, m_swapchain, UINT64_MAX, m_imageAvailableSemaphore, VK_NULL_HANDLE, &imageIndex);
+    if (acquireResult == VK_ERROR_OUT_OF_DATE_KHR) {
+        RecreateSwapchain();
+        return;
+    }
+    if (acquireResult != VK_SUCCESS && acquireResult != VK_SUBOPTIMAL_KHR) {
+        LOG_ERROR("Renderer",
+                  "vkAcquireNextImageKHR failed (VkResult = {}).",
+                  static_cast<int>(acquireResult));
+        return;
+    }
+
+    // Only reset the fence now that we know we'll actually submit.
+    vkResetFences(m_device, 1, &m_inFlightFence);
 
     // 3. Reset and re-record the command buffer for this frame's image.
     vkResetCommandBuffer(m_commandBuffer, 0);
@@ -1155,7 +1226,14 @@ void Renderer::DrawFrame() {
     presentInfo.pSwapchains = swapchains;
     presentInfo.pImageIndices = &imageIndex;
 
-    vkQueuePresentKHR(m_graphicsQueue, &presentInfo);
+    const VkResult presentResult = vkQueuePresentKHR(m_graphicsQueue, &presentInfo);
+    if (presentResult == VK_ERROR_OUT_OF_DATE_KHR || presentResult == VK_SUBOPTIMAL_KHR) {
+        RecreateSwapchain();
+    } else if (presentResult != VK_SUCCESS) {
+        LOG_ERROR("Renderer",
+                  "vkQueuePresentKHR failed (VkResult = {}).",
+                  static_cast<int>(presentResult));
+    }
 }
 
 } // namespace apex

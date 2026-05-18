@@ -74,6 +74,15 @@ public:
     /// Opaque platform-native window handle. Caller is expected to know what type this is.
     void* GetNativeHandle() const;
 
+    /// Window repaint callback. Called by the platform layer when the window needs to be redrawn.
+    using RedrawCallback = void (*)();
+
+    /// Register a callback to be called when the window needs to be redrawn in the modal loop
+    void SetRedrawCallback(RedrawCallback callback);
+
+    /// true while the user is interactively resizing the window.
+    bool IsResizing() const;
+
 private:
     /// Private constructor. Clients use @ref Create instead.
     Window();
