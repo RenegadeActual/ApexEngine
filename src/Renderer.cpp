@@ -248,6 +248,10 @@ bool Renderer::Init(Window* window) {
         Shutdown();
         return false;
     }
+    if (!s_instance->CreateDepthResources()) {
+        Shutdown();
+        return false;
+    }
     if (!s_instance->CreateFramebuffers()) {
         Shutdown();
         return false;
@@ -257,6 +261,14 @@ bool Renderer::Init(Window* window) {
         return false;
     }
     if (!s_instance->CreateGraphicsPipeline()) {
+        Shutdown();
+        return false;
+    }
+    if (!s_instance->CreateVertexBuffer()) {
+        Shutdown();
+        return false;
+    }
+    if (!s_instance->CreateIndexBuffer()) {
         Shutdown();
         return false;
     }
@@ -288,9 +300,12 @@ void Renderer::Shutdown() {
 
     s_instance->DestroySyncObjects();
     s_instance->DestroyCommandPool();
+    s_instance->DestroyIndexBuffer();
+    s_instance->DestroyVertexBuffer();
     s_instance->DestroyGraphicsPipeline();
     s_instance->DestroyPipelineLayout();
     s_instance->DestroyFramebuffers();
+    s_instance->DestroyDepthResources();
     s_instance->DestroyRenderPass();
     s_instance->DestroyImageViews();
     s_instance->DestroySwapchain();
@@ -664,19 +679,18 @@ bool Renderer::RecreateSwapchain() {
     // Wait for the GPU to finish before destroying anything it might
     // still be reading from.
     vkDeviceWaitIdle(m_device);
-
-    // Tear down the resources that depend on the swapchain's dimensions
-    // and format, in reverse order of creation.
     DestroyFramebuffers();
+    DestroyDepthResources();
     DestroyImageViews();
     DestroySwapchain();
 
-    // Build them back up. CreateSwapchain re-queries the surface
-    // capabilities, so it picks up the new size automatically.
     if (!CreateSwapchain()) {
         return false;
     }
     if (!CreateImageViews()) {
+        return false;
+    }
+    if (!CreateDepthResources()) {
         return false;
     }
     if (!CreateFramebuffers()) {
@@ -738,51 +752,62 @@ void Renderer::DestroyImageViews() {
 }
 
 bool Renderer::CreateRenderPass() {
-    // One color attachment matching the swapchain image format.
+    // Color attachment (slot 0).
     VkAttachmentDescription colorAttachment {};
     colorAttachment.format = m_swapchainImageFormat;
     colorAttachment.samples = VK_SAMPLE_COUNT_1_BIT;
-
-    // CLEAR the image at the start of the pass; STORE it at the end so
-    // we can present it.
     colorAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
     colorAttachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
-
-    // No stencil.
     colorAttachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
     colorAttachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-
-    // Initial layout doesn't matter because we're clearing. Final layout
-    // must be PRESENT_SRC_KHR so the swapchain can present it.
     colorAttachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
     colorAttachment.finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
 
-    // Reference to the attachment from the subpass.
+    // Depth attachment (slot 1). DON'T_CARE on store because we don't
+    // need to read depth values after the pass — we only use them
+    // within the pass for the depth test.
+    VkAttachmentDescription depthAttachment {};
+    depthAttachment.format = VK_FORMAT_D32_SFLOAT;
+    depthAttachment.samples = VK_SAMPLE_COUNT_1_BIT;
+    depthAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+    depthAttachment.storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+    depthAttachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+    depthAttachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+    depthAttachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+    depthAttachment.finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+
     VkAttachmentReference colorAttachmentRef {};
-    colorAttachmentRef.attachment = 0; // index into pAttachments below
+    colorAttachmentRef.attachment = 0;
     colorAttachmentRef.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
 
-    // One subpass, writes to the color attachment.
+    VkAttachmentReference depthAttachmentRef {};
+    depthAttachmentRef.attachment = 1;
+    depthAttachmentRef.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+
     VkSubpassDescription subpass {};
     subpass.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
     subpass.colorAttachmentCount = 1;
     subpass.pColorAttachments = &colorAttachmentRef;
+    subpass.pDepthStencilAttachment = &depthAttachmentRef;
 
-    // Synchronize image acquisition with the subpass. Without this the
-    // subpass might start writing to the image before the presentation
-    // engine is done reading it from the previous frame.
+    // Dependency now covers both color output and the depth tests.
     VkSubpassDependency dependency {};
-    dependency.srcSubpass = VK_SUBPASS_EXTERNAL; // work before this pass
-    dependency.dstSubpass = 0;                   // our only subpass
-    dependency.srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+    dependency.srcSubpass = VK_SUBPASS_EXTERNAL;
+    dependency.dstSubpass = 0;
+    dependency.srcStageMask =
+        VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
     dependency.srcAccessMask = 0;
-    dependency.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-    dependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+    dependency.dstStageMask =
+        VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
+    dependency.dstAccessMask =
+        VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
+
+    VkAttachmentDescription attachments[] = {colorAttachment, depthAttachment};
 
     VkRenderPassCreateInfo createInfo {};
     createInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
-    createInfo.attachmentCount = 1;
-    createInfo.pAttachments = &colorAttachment;
+    createInfo.attachmentCount = 2;
+    createInfo.pAttachments = attachments;
     createInfo.subpassCount = 1;
     createInfo.pSubpasses = &subpass;
     createInfo.dependencyCount = 1;
@@ -811,12 +836,12 @@ bool Renderer::CreateFramebuffers() {
     m_swapchainFramebuffers.resize(m_swapchainImageViews.size());
 
     for (size_t i = 0; i < m_swapchainImageViews.size(); ++i) {
-        VkImageView attachments[] = {m_swapchainImageViews[i]};
+        VkImageView attachments[] = {m_swapchainImageViews[i], m_depthImageView};
 
         VkFramebufferCreateInfo createInfo {};
         createInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
         createInfo.renderPass = m_renderPass;
-        createInfo.attachmentCount = 1;
+        createInfo.attachmentCount = 2;
         createInfo.pAttachments = attachments;
         createInfo.width = m_swapchainExtent.width;
         createInfo.height = m_swapchainExtent.height;
@@ -911,11 +936,31 @@ bool Renderer::CreateGraphicsPipeline() {
 
     const VkPipelineShaderStageCreateInfo shaderStages[] = {vertStage, fragStage};
 
-    // 4. Vertex input: empty. Shader hardcodes positions, no buffers.
+    // 4. Vertex input: one binding (the vertex buffer), two attributes
+    // (position at location 0, color at location 1). The locations
+    // must match the `layout(location = N)` declarations in the
+    // vertex shader.
+    VkVertexInputBindingDescription bindingDesc {};
+    bindingDesc.binding = 0;
+    bindingDesc.stride = sizeof(Vertex);
+    bindingDesc.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
+
+    VkVertexInputAttributeDescription attributeDescs[2] {};
+    attributeDescs[0].location = 0;
+    attributeDescs[0].binding = 0;
+    attributeDescs[0].format = VK_FORMAT_R32G32_SFLOAT;
+    attributeDescs[0].offset = offsetof(Vertex, pos);
+    attributeDescs[1].location = 1;
+    attributeDescs[1].binding = 0;
+    attributeDescs[1].format = VK_FORMAT_R32G32B32_SFLOAT;
+    attributeDescs[1].offset = offsetof(Vertex, color);
+
     VkPipelineVertexInputStateCreateInfo vertexInput {};
     vertexInput.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
-    vertexInput.vertexBindingDescriptionCount = 0;
-    vertexInput.vertexAttributeDescriptionCount = 0;
+    vertexInput.vertexBindingDescriptionCount = 1;
+    vertexInput.pVertexBindingDescriptions = &bindingDesc;
+    vertexInput.vertexAttributeDescriptionCount = 2;
+    vertexInput.pVertexAttributeDescriptions = attributeDescs;
 
     // 5. Input assembly: triples of vertices form triangles.
     VkPipelineInputAssemblyStateCreateInfo inputAssembly {};
@@ -972,6 +1017,15 @@ bool Renderer::CreateGraphicsPipeline() {
     colorBlend.attachmentCount = 1;
     colorBlend.pAttachments = &colorBlendAttachment;
 
+    // Depth/stencil state. Test against depth, write to depth, no stencil.
+    VkPipelineDepthStencilStateCreateInfo depthStencil {};
+    depthStencil.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
+    depthStencil.depthTestEnable = VK_TRUE;
+    depthStencil.depthWriteEnable = VK_TRUE;
+    depthStencil.depthCompareOp = VK_COMPARE_OP_LESS;
+    depthStencil.depthBoundsTestEnable = VK_FALSE;
+    depthStencil.stencilTestEnable = VK_FALSE;
+
     // 10. The big create-info that ties it all together.
     VkGraphicsPipelineCreateInfo pipelineInfo {};
     pipelineInfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
@@ -982,7 +1036,7 @@ bool Renderer::CreateGraphicsPipeline() {
     pipelineInfo.pViewportState = &viewportState;
     pipelineInfo.pRasterizationState = &rasterizer;
     pipelineInfo.pMultisampleState = &multisample;
-    pipelineInfo.pDepthStencilState = nullptr;
+    pipelineInfo.pDepthStencilState = &depthStencil;
     pipelineInfo.pColorBlendState = &colorBlend;
     pipelineInfo.pDynamicState = &dynamicState;
     pipelineInfo.layout = m_pipelineLayout;
@@ -1125,9 +1179,11 @@ void Renderer::RecordCommandBuffer(uint32_t imageIndex) {
         return;
     }
 
-    // Dark blue clear so the rainbow triangle stands out.
-    VkClearValue clearColor {};
-    clearColor.color = {{0.0f, 0.0f, 0.05f, 1.0f}};
+    // Index 0 matches the color attachment, index 1 matches the depth
+    // attachment — same order as the render pass's attachment array.
+    VkClearValue clearValues[2] {};
+    clearValues[0].color = {{0.0f, 0.0f, 0.05f, 1.0f}};
+    clearValues[1].depthStencil = {1.0f, 0}; // depth=1.0 (far), stencil unused
 
     VkRenderPassBeginInfo renderPassInfo {};
     renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
@@ -1135,8 +1191,8 @@ void Renderer::RecordCommandBuffer(uint32_t imageIndex) {
     renderPassInfo.framebuffer = m_swapchainFramebuffers[imageIndex];
     renderPassInfo.renderArea.offset = {0, 0};
     renderPassInfo.renderArea.extent = m_swapchainExtent;
-    renderPassInfo.clearValueCount = 1;
-    renderPassInfo.pClearValues = &clearColor;
+    renderPassInfo.clearValueCount = 2;
+    renderPassInfo.pClearValues = clearValues;
 
     vkCmdBeginRenderPass(m_commandBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
     vkCmdBindPipeline(m_commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_graphicsPipeline);
@@ -1155,7 +1211,14 @@ void Renderer::RecordCommandBuffer(uint32_t imageIndex) {
     scissor.extent = m_swapchainExtent;
     vkCmdSetScissor(m_commandBuffer, 0, 1, &scissor);
 
-    vkCmdDraw(m_commandBuffer, 3, 1, 0, 0);
+    VkBuffer vertexBuffers[] = {m_vertexBuffer};
+    VkDeviceSize offsets[] = {0};
+    vkCmdBindVertexBuffers(m_commandBuffer, 0, 1, vertexBuffers, offsets);
+
+    vkCmdBindIndexBuffer(m_commandBuffer, m_indexBuffer, 0, VK_INDEX_TYPE_UINT16);
+
+    // 6 indices, 1 instance, no offsets.
+    vkCmdDrawIndexed(m_commandBuffer, 6, 1, 0, 0, 0);
     vkCmdEndRenderPass(m_commandBuffer);
 
     if (vkEndCommandBuffer(m_commandBuffer) != VK_SUCCESS) {
@@ -1234,6 +1297,266 @@ void Renderer::DrawFrame() {
                   "vkQueuePresentKHR failed (VkResult = {}).",
                   static_cast<int>(presentResult));
     }
+}
+
+bool Renderer::CreateVertexBuffer() {
+    // Hardcoded triangle for now. Future engine work will load this
+    // from a real mesh format.
+    static const Vertex vertices[] = {
+        {{-0.5f, -0.5f}, {1.0f, 0.0f, 0.0f}}, // top-left, red
+        {{0.5f, -0.5f}, {0.0f, 1.0f, 0.0f}},  // top-right, green
+        {{0.5f, 0.5f}, {0.0f, 0.0f, 1.0f}},   // bottom-right, blue
+        {{-0.5f, 0.5f}, {1.0f, 1.0f, 0.0f}},  // bottom-left, yellow
+    };
+    const VkDeviceSize bufferSize = sizeof(vertices);
+
+    // 1. Create the buffer handle.
+    VkBufferCreateInfo bufferInfo {};
+    bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
+    bufferInfo.size = bufferSize;
+    bufferInfo.usage = VK_BUFFER_USAGE_VERTEX_BUFFER_BIT;
+    bufferInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+
+    if (vkCreateBuffer(m_device, &bufferInfo, nullptr, &m_vertexBuffer) != VK_SUCCESS) {
+        LOG_FATAL("Renderer", "vkCreateBuffer failed for vertex buffer.");
+        return false;
+    }
+
+    // 2. Query what kind of memory the buffer needs.
+    VkMemoryRequirements memReqs;
+    vkGetBufferMemoryRequirements(m_device, m_vertexBuffer, &memReqs);
+
+    // 3. Pick a memory type that is host-visible (CPU can map it) and
+    // host-coherent (writes are immediately visible to GPU without
+    // explicit flushing).
+    const u32 memTypeIndex =
+        FindMemoryType(memReqs.memoryTypeBits,
+                       VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+    if (memTypeIndex == UINT32_MAX) {
+        LOG_FATAL("Renderer", "No suitable memory type for vertex buffer.");
+        return false;
+    }
+
+    // 4. Allocate the memory.
+    VkMemoryAllocateInfo allocInfo {};
+    allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
+    allocInfo.allocationSize = memReqs.size;
+    allocInfo.memoryTypeIndex = memTypeIndex;
+
+    if (vkAllocateMemory(m_device, &allocInfo, nullptr, &m_vertexBufferMemory) != VK_SUCCESS) {
+        LOG_FATAL("Renderer", "vkAllocateMemory failed for vertex buffer.");
+        return false;
+    }
+
+    // 5. Associate the memory with the buffer.
+    vkBindBufferMemory(m_device, m_vertexBuffer, m_vertexBufferMemory, 0);
+
+    // 6. Map the memory, copy the vertex data in, unmap. Because the
+    // memory is HOST_COHERENT, the write is visible to the GPU
+    // immediately — no explicit flush needed.
+    void* data = nullptr;
+    vkMapMemory(m_device, m_vertexBufferMemory, 0, bufferSize, 0, &data);
+    std::memcpy(data, vertices, static_cast<size_t>(bufferSize));
+    vkUnmapMemory(m_device, m_vertexBufferMemory);
+
+    LOG_INFO("Renderer",
+             "Vertex buffer created ({} vertices, {} bytes).",
+             sizeof(vertices) / sizeof(vertices[0]),
+             bufferSize);
+    return true;
+}
+
+void Renderer::DestroyVertexBuffer() {
+    if (m_vertexBuffer != VK_NULL_HANDLE) {
+        vkDestroyBuffer(m_device, m_vertexBuffer, nullptr);
+        m_vertexBuffer = VK_NULL_HANDLE;
+    }
+    if (m_vertexBufferMemory != VK_NULL_HANDLE) {
+        vkFreeMemory(m_device, m_vertexBufferMemory, nullptr);
+        m_vertexBufferMemory = VK_NULL_HANDLE;
+    }
+}
+
+bool Renderer::CreateIndexBuffer() {
+    // Indices for a quad: two triangles sharing a diagonal.
+    static const uint16_t indices[] = {
+        0,
+        1,
+        2,
+        2,
+        3,
+        0,
+    };
+    const VkDeviceSize bufferSize = sizeof(indices);
+
+    VkBufferCreateInfo bufferInfo {};
+    bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
+    bufferInfo.size = bufferSize;
+    bufferInfo.usage = VK_BUFFER_USAGE_INDEX_BUFFER_BIT;
+    bufferInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+
+    if (vkCreateBuffer(m_device, &bufferInfo, nullptr, &m_indexBuffer) != VK_SUCCESS) {
+        LOG_FATAL("Renderer", "vkCreateBuffer failed for index buffer.");
+        return false;
+    }
+
+    VkMemoryRequirements memReqs;
+    vkGetBufferMemoryRequirements(m_device, m_indexBuffer, &memReqs);
+
+    const u32 memTypeIndex =
+        FindMemoryType(memReqs.memoryTypeBits,
+                       VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+    if (memTypeIndex == UINT32_MAX) {
+        LOG_FATAL("Renderer", "No suitable memory type for index buffer.");
+        return false;
+    }
+
+    VkMemoryAllocateInfo allocInfo {};
+    allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
+    allocInfo.allocationSize = memReqs.size;
+    allocInfo.memoryTypeIndex = memTypeIndex;
+
+    if (vkAllocateMemory(m_device, &allocInfo, nullptr, &m_indexBufferMemory) != VK_SUCCESS) {
+        LOG_FATAL("Renderer", "vkAllocateMemory failed for index buffer.");
+        return false;
+    }
+
+    vkBindBufferMemory(m_device, m_indexBuffer, m_indexBufferMemory, 0);
+
+    void* data = nullptr;
+    vkMapMemory(m_device, m_indexBufferMemory, 0, bufferSize, 0, &data);
+    std::memcpy(data, indices, static_cast<size_t>(bufferSize));
+    vkUnmapMemory(m_device, m_indexBufferMemory);
+
+    LOG_INFO("Renderer",
+             "Index buffer created ({} indices, {} bytes).",
+             sizeof(indices) / sizeof(indices[0]),
+             bufferSize);
+    return true;
+}
+
+void Renderer::DestroyIndexBuffer() {
+    if (m_indexBuffer != VK_NULL_HANDLE) {
+        vkDestroyBuffer(m_device, m_indexBuffer, nullptr);
+        m_indexBuffer = VK_NULL_HANDLE;
+    }
+    if (m_indexBufferMemory != VK_NULL_HANDLE) {
+        vkFreeMemory(m_device, m_indexBufferMemory, nullptr);
+        m_indexBufferMemory = VK_NULL_HANDLE;
+    }
+}
+
+bool Renderer::CreateDepthResources() {
+    // TODO: query supported depth formats from the device instead of
+    // hardcoding. D32_SFLOAT is universally supported on desktop GPUs
+    // as a depth-stencil attachment, so it's fine for now.
+    const VkFormat depthFormat = VK_FORMAT_D32_SFLOAT;
+
+    // 1. Create the depth image: 2D, swapchain-sized, depth-stencil-attachment usage.
+    VkImageCreateInfo imageInfo {};
+    imageInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
+    imageInfo.imageType = VK_IMAGE_TYPE_2D;
+    imageInfo.extent.width = m_swapchainExtent.width;
+    imageInfo.extent.height = m_swapchainExtent.height;
+    imageInfo.extent.depth = 1;
+    imageInfo.mipLevels = 1;
+    imageInfo.arrayLayers = 1;
+    imageInfo.format = depthFormat;
+    imageInfo.tiling = VK_IMAGE_TILING_OPTIMAL;
+    imageInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+    imageInfo.usage = VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT;
+    imageInfo.samples = VK_SAMPLE_COUNT_1_BIT;
+    imageInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+
+    if (vkCreateImage(m_device, &imageInfo, nullptr, &m_depthImage) != VK_SUCCESS) {
+        LOG_FATAL("Renderer", "vkCreateImage failed for depth buffer.");
+        return false;
+    }
+
+    // 2. Query memory requirements. Depth images live in DEVICE_LOCAL
+    // memory — the CPU never touches them, and DEVICE_LOCAL is fastest
+    // for GPU reads/writes.
+    VkMemoryRequirements memReqs;
+    vkGetImageMemoryRequirements(m_device, m_depthImage, &memReqs);
+
+    const u32 memTypeIndex =
+        FindMemoryType(memReqs.memoryTypeBits, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+    if (memTypeIndex == UINT32_MAX) {
+        LOG_FATAL("Renderer", "No suitable memory type for depth buffer.");
+        return false;
+    }
+
+    // 3. Allocate.
+    VkMemoryAllocateInfo allocInfo {};
+    allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
+    allocInfo.allocationSize = memReqs.size;
+    allocInfo.memoryTypeIndex = memTypeIndex;
+
+    if (vkAllocateMemory(m_device, &allocInfo, nullptr, &m_depthImageMemory) != VK_SUCCESS) {
+        LOG_FATAL("Renderer", "vkAllocateMemory failed for depth buffer.");
+        return false;
+    }
+
+    // 4. Bind memory to image.
+    vkBindImageMemory(m_device, m_depthImage, m_depthImageMemory, 0);
+
+    // 5. Create the image view. Aspect is DEPTH (not COLOR) — the same
+    // physical image can have separate views for depth and stencil if
+    // the format has both, but our format is depth-only.
+    VkImageViewCreateInfo viewInfo {};
+    viewInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+    viewInfo.image = m_depthImage;
+    viewInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
+    viewInfo.format = depthFormat;
+    viewInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT;
+    viewInfo.subresourceRange.baseMipLevel = 0;
+    viewInfo.subresourceRange.levelCount = 1;
+    viewInfo.subresourceRange.baseArrayLayer = 0;
+    viewInfo.subresourceRange.layerCount = 1;
+
+    if (vkCreateImageView(m_device, &viewInfo, nullptr, &m_depthImageView) != VK_SUCCESS) {
+        LOG_FATAL("Renderer", "vkCreateImageView failed for depth buffer.");
+        return false;
+    }
+
+    LOG_INFO("Renderer",
+             "Depth resources created ({}x{}).",
+             m_swapchainExtent.width,
+             m_swapchainExtent.height);
+    return true;
+}
+
+void Renderer::DestroyDepthResources() {
+    if (m_depthImageView != VK_NULL_HANDLE) {
+        vkDestroyImageView(m_device, m_depthImageView, nullptr);
+        m_depthImageView = VK_NULL_HANDLE;
+    }
+    if (m_depthImage != VK_NULL_HANDLE) {
+        vkDestroyImage(m_device, m_depthImage, nullptr);
+        m_depthImage = VK_NULL_HANDLE;
+    }
+    if (m_depthImageMemory != VK_NULL_HANDLE) {
+        vkFreeMemory(m_device, m_depthImageMemory, nullptr);
+        m_depthImageMemory = VK_NULL_HANDLE;
+    }
+}
+
+u32 Renderer::FindMemoryType(u32 typeFilter, VkMemoryPropertyFlags properties) {
+    VkPhysicalDeviceMemoryProperties memProperties;
+    vkGetPhysicalDeviceMemoryProperties(m_physicalDevice, &memProperties);
+
+    for (u32 i = 0; i < memProperties.memoryTypeCount; ++i) {
+        // typeFilter is a bitmask of allowed memory types from the
+        // buffer's memory requirements. Check whether bit i is set.
+        const bool typeAllowed = (typeFilter & (1u << i)) != 0;
+        // The memory type must have all the requested property flags.
+        const bool hasProperties =
+            (memProperties.memoryTypes[i].propertyFlags & properties) == properties;
+        if (typeAllowed && hasProperties) {
+            return i;
+        }
+    }
+    return UINT32_MAX;
 }
 
 } // namespace apex

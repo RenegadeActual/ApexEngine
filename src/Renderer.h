@@ -12,6 +12,14 @@ namespace apex {
 
 class Window;
 
+/// A single vertex with a 2D position and an RGB color. Layout must
+/// match the vertex shader's input declarations and the pipeline's
+/// vertex input description.
+struct Vertex {
+    float pos[2];
+    float color[3];
+};
+
 /// Singleton Vulkan renderer.
 ///
 /// Owns the VkInstance, debug messenger, surface, physical and logical
@@ -115,6 +123,22 @@ private:
 
     void RecordCommandBuffer(u32 imageIndex);
 
+    // ---- Vertex Buffer ----
+    bool CreateVertexBuffer();
+    void DestroyVertexBuffer();
+
+    // ---- Index Buffer ----
+    bool CreateIndexBuffer();
+    void DestroyIndexBuffer();
+
+    // ---- Depth Resources ----
+    bool CreateDepthResources();
+    void DestroyDepthResources();
+
+    /// Find a GPU memory type matching the given type filter and
+    /// property requirements. Returns UINT32_MAX if none qualifies.
+    u32 FindMemoryType(u32 typeFilter, VkMemoryPropertyFlags properties);
+
     static Renderer* s_instance;
 
     /// Connection to the Vulkan loader.
@@ -162,11 +186,33 @@ private:
     /// One framebuffer per swapchain image view.
     std::vector<VkFramebuffer> m_swapchainFramebuffers;
 
+    /// Depth image used as the depth attachment for every framebuffer.
+    /// Recreated when the swapchain is recreated.
+    VkImage m_depthImage = VK_NULL_HANDLE;
+
+    /// GPU memory backing m_depthImage.
+    VkDeviceMemory m_depthImageMemory = VK_NULL_HANDLE;
+
+    /// View into m_depthImage as a 2D depth attachment.
+    VkImageView m_depthImageView = VK_NULL_HANDLE;
+
     /// Pipeline layout. Declares uniforms and push constants for graphics pipelines
     VkPipelineLayout m_pipelineLayout = VK_NULL_HANDLE;
 
     /// Graphics Pipeline that draws the triangle
     VkPipeline m_graphicsPipeline = VK_NULL_HANDLE;
+
+    /// Buffer holding the triangle's vertex data.
+    VkBuffer m_vertexBuffer = VK_NULL_HANDLE;
+
+    /// GPU memory backing m_vertexBuffer.
+    VkDeviceMemory m_vertexBufferMemory = VK_NULL_HANDLE;
+
+    /// Buffer holding the index data.
+    VkBuffer m_indexBuffer = VK_NULL_HANDLE;
+
+    /// GPU memory backing m_indexBuffer.
+    VkDeviceMemory m_indexBufferMemory = VK_NULL_HANDLE;
 
     VkCommandPool m_commandPool = VK_NULL_HANDLE;
     VkCommandBuffer m_commandBuffer = VK_NULL_HANDLE;

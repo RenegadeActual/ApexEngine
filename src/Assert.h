@@ -1,7 +1,5 @@
 #pragma once
 
-#include "Common.h"
-
 #include <format>
 #include <string>
 #include <string_view>
@@ -35,10 +33,8 @@ bool IsDebuggerAttached();
 /// @param file      Source file of the call site (`__FILE__`).
 /// @param line      Source line of the call site (`__LINE__`).
 /// @param message   Optional caller-supplied message. May be empty.
-[[noreturn]] void AssertFail(const char* condition,
-                             const char* file,
-                             int line,
-                             std::string_view message);
+[[noreturn]] void
+AssertFail(const char* condition, const char* file, int line, std::string_view message);
 
 /// Format an optional std::format-style message for an assertion macro.
 /// Used internally by @ref APEX_ASSERT; not intended for direct use.
@@ -93,6 +89,6 @@ inline std::string FormatAssertMessage() {
 #define APEX_VERIFY(cond, ...) APEX_ASSERT(cond, __VA_ARGS__)
 
 #define APEX_UNREACHABLE()                                                                         \
-    ::apex::detail::AssertFail("APEX_UNREACHABLE", __FILE__, __LINE__, std::string{})
+    ::apex::detail::AssertFail("APEX_UNREACHABLE", __FILE__, __LINE__, std::string {})
 
 #endif
