@@ -1,0 +1,105 @@
+{
+    // ---- Required ----
+    "id": "base:alloy.bronze",
+    "name": "Bronze",
+    "type": "alloy",
+
+    "base_element": "base:element.copper",
+
+    "composition_model": "mass_fraction_range",
+
+    "composition": [
+        {
+            "element": "base:element.copper",
+            "role": "base",
+            "min_mass_percent": 75,
+            "max_mass_percent": 98
+        },
+        {
+            "element": "base:element.tin",
+            "role": "primary_alloying",
+            "min_mass_percent": 2,
+            "max_mass_percent": 25
+        }
+    ],
+
+    "variants": [
+        {
+            "id": "base:alloy.bronze.tool_bronze",
+            "name": "Tool Bronze",
+
+            "composition": [
+                { "element": "base:element.copper", "min_mass_percent": 88, "max_mass_percent": 92 },
+                { "element": "base:element.tin", "min_mass_percent": 8, "max_mass_percent": 12 }
+            ],
+
+            "use_tags": [
+                "tools",
+                "weapons",
+                "armor",
+                "gears",
+                "basic_machine_parts"
+            ]
+        },
+
+        {
+            "id": "base:alloy.bronze.bell_bronze",
+            "name": "Bell Bronze",
+
+            "composition": [
+                { "element": "base:element.copper", "min_mass_percent": 76, "max_mass_percent": 80 },
+                { "element": "base:element.tin", "min_mass_percent": 20, "max_mass_percent": 24 }
+            ],
+
+            "use_tags": [
+                "bells",
+                "resonators",
+                "hard_castings"
+            ],
+
+            "limitations": [
+                "poor_structural_ductility"
+            ]
+        },
+
+        {
+            "id": "base:alloy.bronze.gunmetal",
+            "name": "Gunmetal Bronze",
+
+            "composition": [
+                { "element": "base:element.copper", "min_mass_percent": 84, "max_mass_percent": 90 },
+                { "element": "base:element.tin", "min_mass_percent": 5, "max_mass_percent": 12 },
+                { "element": "base:element.zinc", "min_mass_percent": 1, "max_mass_percent": 6 }
+            ],
+
+            "use_tags": [
+                "pressure_fittings",
+                "valves",
+                "pump_bodies",
+                "cannon_castings"
+            ]
+        },
+
+        {
+            "id": "base:alloy.bronze.leaded_bronze",
+            "name": "Leaded Bronze",
+
+            "composition": [
+                { "element": "base:element.copper", "min_mass_percent": 78, "max_mass_percent": 90 },
+                { "element": "base:element.tin", "min_mass_percent": 4, "max_mass_percent": 12 },
+                { "element": "base:element.lead", "min_mass_percent": 2, "max_mass_percent": 15 }
+            ],
+
+            "use_tags": [
+                "bearings",
+                "bushings",
+                "low_friction_parts"
+            ],
+
+            "limitations": [
+                "poor_food_safety",
+                "toxic_when_machined_or_ingested"
+            ]
+        }
+    ]
+}
