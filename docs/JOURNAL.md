@@ -1,5 +1,99 @@
 # Development Journal
 
+## 2026-05-17 (buffers) — Buffers and depth
+
+Three foundational pieces in one session: vertex buffer, index buffer,
+depth buffer. The triangle became a quad along the way as a visible
+proof that index buffers work. No 3D yet — all four vertices are at
+z=0 — but the infrastructure for real 3D rendering is now in place.
+
+### Vertex buffer
+
+Moved the triangle's positions and colors out of hardcoded shader
+arrays into a real `VkBuffer`. The vertex shader now reads `inPos` and
+`inColor` from vertex attributes; the pipeline declares one binding
+(stride = `sizeof(Vertex)`, per-vertex input rate) and two attributes
+(position as `R32G32_SFLOAT`, color as `R32G32B32_SFLOAT`). Location
+numbers in the C++ pipeline match the `layout(location = N)` in the
+shader.
+
+Memory model: separate `VkBuffer` (logical resource handle) and
+`VkDeviceMemory` (actual GPU storage). Added a `FindMemoryType` helper
+that walks the device's memory types looking for one matching both a
+typeFilter bitmask and a property-flags set. Currently uses
+`HOST_VISIBLE` + `HOST_COHERENT` for the vertex data — small enough
+that direct CPU-mapped uploads are fine. Real meshes will eventually
+go through `DEVICE_LOCAL` with a staging buffer for upload, but that's
+a future refactor.
+
+### Index buffer
+
+Same pattern as the vertex buffer with `VK_BUFFER_USAGE_INDEX_BUFFER_BIT`
+and a uint16 index array. Geometry changed to a quad (4 vertices in
+the vertex buffer, 6 indices forming two triangles) so the indexed
+draw is visibly different from before.
+
+`vkCmdBindIndexBuffer` + `vkCmdDrawIndexed(6, 1, 0, 0, 0)` replaces
+the old `vkCmdDraw`. Index type is `VK_INDEX_TYPE_UINT16` to match
+the buffer.
+
+The code duplication between `CreateVertexBuffer` and `CreateIndexBuffer`
+is significant — same allocation, same map/copy/unmap. Worth
+refactoring into a generic `CreateBuffer(size, usage, properties)`
+helper when a third buffer type appears (probably uniform buffers).
+
+### Depth buffer
+
+A `VkImage` at swapchain dimensions, format `D32_SFLOAT`, usage
+`DEPTH_STENCIL_ATTACHMENT_BIT`, memory `DEVICE_LOCAL`. Plus an image
+view with `VK_IMAGE_ASPECT_DEPTH_BIT`.
+
+Wiring it through:
+- Render pass got a second attachment description and reference;
+  subpass references it via `pDepthStencilAttachment`; the subpass
+  dependency now includes the early-fragment-tests pipeline stage
+  and the depth-stencil-attachment-write access bit.
+- Framebuffer attachments array is now two elements: color view at
+  index 0 (matching attachment slot 0), depth view at index 1.
+- Pipeline added a `VkPipelineDepthStencilStateCreateInfo` with depth
+  test and depth write enabled, compare op `LESS`. The pipeline's
+  `pDepthStencilState` slot — previously nullptr — now points at it.
+- Command buffer's `clearValues` array is now two elements: color
+  clear at index 0, depthStencil clear `{1.0f, 0}` at index 1.
+- RecreateSwapchain destroys + recreates the depth image when the
+  swapchain extent changes.
+
+### What didn't change visually
+
+The quad renders exactly as before because every vertex is at z=0
+and the depth clear is 1.0. The depth test against 0 passes for
+every fragment. The infrastructure is in place; the moment a second
+piece of geometry exists at a different depth, the depth test will
+correctly resolve the overlap.
+
+### Files at end of session
+
+- shaders/triangle.vert — reads vertex inputs instead of hardcoded arrays
+- src/Renderer.h — Vertex struct, vertex/index/depth resource members
+  and method declarations
+- src/Renderer.cpp — implementations for vertex/index/depth resources,
+  FindMemoryType helper, vertex input state on pipeline, depth state on
+  pipeline, depth attachment in render pass + framebuffers, depth clear
+  value, depth integration in RecreateSwapchain and Init/Shutdown
+- src/Assert.h — minor clang-format pass and dropped an unused include
+
+### Next steps
+
+- Math library: probably GLM via the same exception logic as
+  nlohmann::json (header-only, drop into `extern/`). Decision lands
+  tomorrow.
+- Push constants for the model-view-projection matrix so geometry
+  can move and rotate.
+- A cube. First real 3D scene.
+- Refactor: `CreateBuffer` helper to collapse the duplication between
+  vertex and index buffer creation. Query supported depth formats
+  instead of hardcoding D32_SFLOAT.
+
 ## 2026-05-17 (resize) — Live window resize
 
 Got window resizing to work without the white flash that was happening
